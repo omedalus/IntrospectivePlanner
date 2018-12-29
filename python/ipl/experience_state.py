@@ -13,25 +13,15 @@ class ExperienceState:
 
 
   def __init__(self):
-    # Inputs received from the organism's external sensors,
-    # reflecting the state of the outside world.
-    # E.g. sound, light, odor, etc.
-    self.external_inputs = set()
+    # The most recent action attempted. 
+    self.last_action = None
 
-    # Inputs received from sensors inside the organism's body,
-    # reflecting the state of the organism's makeup.
-    # E.g. "I'm hungry", "I'm hot", or even explicit mental 
-    # modes such as "I'm angry."
-    self.somatic_inputs = set()
+    # Boolean stating whether or not the last attempted action
+    # went according to plan. Defaults to False.
+    self.was_last_action_successful = False
 
-    # Working memory notes that the organism has made for itself.
-    # E.g. "I'm working on a knight's gambit right now."
-    self.registers = set()
-
-    # Rules that represent how satisfying it believes this state 
-    # will be, in and of its own right.
-    # E.g. "When I am in a checkmate, I am unhappy."
-    self.evaluation_rules = set()
+    # Boolean to determine if the search can stop. Default is False.
+    self.is_victorious = False
 
     # Rules that represent what the organism believes its next 
     # ExperienceState will be given certain actions (or lacks of
@@ -39,3 +29,5 @@ class ExperienceState:
     # E.g. "If I advance my pawn, the pawn will be one square
     # ahead of where it currently is."
     self.progression_rules = set()
+
+
