@@ -14,33 +14,36 @@ class TeeMazeGame:
     self.__num_steps_after_turn = num_steps_after_turn
 
 
-  def state(self):
+  def __game_state(self):
     retval = set()
     if self.__position == self.__victory_position:
-      retval.add('Victory')
+      retval.add('VICTORY')
 
     if self.__position < self.__num_steps_before_turn:
-      retval.add('North')
+      retval.add('NORTH')
     elif self.__position < self.__victory_position:
-      retval.add('West')
+      retval.add('WEST')
 
     if self.__position > 0:
       if self.__position <= self.__num_steps_before_turn:
-        retval.add('South')
+        retval.add('SOUTH')
       else:
-        retval.add('East')
+        retval.add('EAST')
       
     if not self.__is_alive:
-      retval.add('Dead')
+      retval.add('DEAD')
     
     return retval
 
+  # Performs action a, which must be an Action object.
+  # If a has a precondition, the game first tries to match
+  # the precondition of a, and then performs the action 
+  # iff the precondition was satisfied.
   def action(self, a):
-    s = self.state()
-    if 'Victory' in s or 'Dead' in s:
+    s = self.__game_state()
+    if 'VICTORY' in s or 'DEAD' in s:
       return
 
-    if ('North' in s and a == 'North') or ('West' in s and a == 'West'):
+    if ('NORTH' in s and a == 'NORTH') or ('WEST' in s and a == 'WEST'):
       self.__position += 1
 
-      

@@ -14,11 +14,15 @@ class ExperienceState:
 
   def __init__(self):
     # The most recent action attempted. 
+    # NOTE: This is isomorphic to having a short-term 
+    # action memory stack of depth 1.
     self.last_action = None
 
-    # Boolean stating whether or not the last attempted action
-    # went according to plan. Defaults to False.
-    self.was_last_action_successful = False
+    # Boolean stating whether or not the precondition 
+    # of the last attempted action was satisfied by 
+    # the state of the world. 
+    # Defaults to False.
+    self.was_last_precondition_satisfied = False
 
     # Boolean to determine if the search can stop. Default is False.
     self.is_victorious = False
