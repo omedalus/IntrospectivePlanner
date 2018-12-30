@@ -10,3 +10,5 @@ class Action:
 
     # The action to take.
     self.action = None
+
+
