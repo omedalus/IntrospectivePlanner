@@ -36,12 +36,13 @@ class Organism:
 
       self.__exst.last_action = a
 
-      # TODO: Test the action's precondition against the game state.
-
       self.game.action(a)
 
-
-  def __choose_action(self):
+  def __generate_possible_actions(self):
     possible_actions = ['NORTH', 'SOUTH', 'EAST', 'WEST']
+    return possible_actions
+
+
+  def __choose_action(self, possible_actions):
     astr = random.choice(possible_actions)
     return Action(astr)

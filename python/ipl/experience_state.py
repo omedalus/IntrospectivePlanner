@@ -13,26 +13,12 @@ class ExperienceState:
 
 
   def __init__(self):
-    # The most recent action attempted. 
-    # NOTE: This is isomorphic to having a short-term 
-    # action memory stack of depth 1.
-    self.last_action = None
+    # Rules that represent which actions can be taken under
+    # which circumstances.
+    self.action_rules = set()
 
-    # Boolean stating whether or not the precondition 
-    # of the last attempted action was satisfied by 
-    # the state of the world. 
-    # Defaults to False.
-    self.was_last_precondition_satisfied = False
-
-    # Boolean to determine if the search can stop.
-    # Default is False.
-    self.is_victorious = False
-
-    # Rules that represent what the organism believes its next 
-    # ExperienceState will be given certain actions (or lacks of
-    # action).
-    # E.g. "If I advance my pawn, the pawn will be one square
-    # ahead of where it currently is."
-    self.progression_rules = set()
-
+    # A map of recently checked values. These can be sensor inputs,
+    # internal registers, stencils, etc. They're specified by
+    # string, and mapped to a Boolean.
+    self.checked = {}
 
