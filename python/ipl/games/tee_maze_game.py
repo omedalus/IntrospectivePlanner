@@ -1,4 +1,5 @@
 
+from ..action import Action
 
 class TeeMazeGame:
   """
@@ -7,14 +8,22 @@ class TeeMazeGame:
   pre-defined length.
   """
   def __init__(self, num_steps_before_turn, num_steps_after_turn):
+    self.title = 'Tee Maze Game {}x{}'.format(num_steps_before_turn, num_steps_after_turn)
+    self.turn = 0
+
     self.__is_alive = True 
     self.__position = 0
     self.__victory_position = num_steps_before_turn + num_steps_after_turn
     self.__num_steps_before_turn = num_steps_before_turn
     self.__num_steps_after_turn = num_steps_after_turn
 
+  def __str__(self):
+    gs = self.state()
+    retval = '#{} @{}:'.format(self.turn, self.__position)
+    retval += str(gs)
+    return retval
 
-  def __game_state(self):
+  def state(self):
     retval = set()
     if self.__position == self.__victory_position:
       retval.add('VICTORY')
@@ -35,15 +44,23 @@ class TeeMazeGame:
     
     return retval
 
-  # Performs action a, which must be an Action object.
-  # If a has a precondition, the game first tries to match
-  # the precondition of a, and then performs the action 
-  # iff the precondition was satisfied.
+  # Performs action a, which is given as a string.
+  # Can be given as an Action object, in which case
+  # it takes the "action" member of the Action object.
   def action(self, a):
-    s = self.__game_state()
-    if 'VICTORY' in s or 'DEAD' in s:
+    if isinstance(a, Action):
+      a = a.action
+
+    self.turn += 1
+
+    gs = self.state()
+    if 'VICTORY' in gs or 'DEAD' in gs:
       return
 
-    if ('NORTH' in s and a == 'NORTH') or ('WEST' in s and a == 'WEST'):
+    if ('NORTH' in gs and a == 'NORTH') or ('WEST' in gs and a == 'WEST'):
       self.__position += 1
+
+    if ('SOUTH' in gs and a == 'SOUTH') or ('EAST' in gs and a == 'EAST'):
+      self.__position -= 1
+
 

@@ -24,7 +24,8 @@ class ExperienceState:
     # Defaults to False.
     self.was_last_precondition_satisfied = False
 
-    # Boolean to determine if the search can stop. Default is False.
+    # Boolean to determine if the search can stop.
+    # Default is False.
     self.is_victorious = False
 
     # Rules that represent what the organism believes its next 

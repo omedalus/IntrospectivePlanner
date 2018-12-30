@@ -2,6 +2,10 @@
 from .experience_state import ExperienceState
 from .reflex_action_statement import ReflexActionStatement
 
+from .action import Action
+
+import random
+
 
 class Organism:
   """
@@ -9,8 +13,8 @@ class Organism:
   """
 
 
-  def __init__(self):
-    self.game = None
+  def __init__(self, game=None):
+    self.game = game
     self.__exst = ExperienceState()
 
 
@@ -18,22 +22,26 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
+    print('Playing game: ' + self.game.title)
     while True:
+      print('')
+      print(self.game)
+
       gs = self.game.state()
-      print(gs)
-      if 'Victory' in gs or 'Dead' in gs:
+      if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.__exst.external_inputs = gs
       a = self.__choose_action()
       print(a)
-      print('')
+
+      self.__exst.last_action = a
+
+      # TODO: Test the action's precondition against the game state.
 
       self.game.action(a)
 
 
   def __choose_action(self):
-    if 'North' in self.__exst.external_inputs:
-      return 'North'
-    else:
-      return 'West'
+    possible_actions = ['NORTH', 'SOUTH', 'EAST', 'WEST']
+    astr = random.choice(possible_actions)
+    return Action(astr)
