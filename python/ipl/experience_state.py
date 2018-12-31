@@ -16,12 +16,14 @@ class ExperienceState:
     # The most recent command that the organism sent to the game.
     self.last_command = None
 
-    # Rules that represent which actions can be taken under
-    # which circumstances.
-    self.action_rules = set()
-
     # A map of recently checked values. These can be sensor inputs,
     # internal registers, stencils, etc. They're specified by
     # string, and mapped to a Boolean.
     self.checked = {}
+
+    # A map of named synaptomes. Synaptomes get checked against
+    # an existing experience state, so checking them is a free action.
+    # NOTE: Maybe the organism can choose to check a named synaptome,
+    # or maybe checking synaptomes is itself an action.
+    self.synaptomes = {}
 

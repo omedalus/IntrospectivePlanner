@@ -1,6 +1,9 @@
 
 from ..action import Action
 
+from ..synapton import Synapton
+from ..synaptome import Synaptome
+
 import random
 
 CARDINALS = ['NORTH', 'EAST', 'SOUTH', 'WEST']
@@ -61,16 +64,23 @@ class ElMazeGame:
     return retval
 
 
+  def seed_synaptomes(self, experience_state):
+    synaptomes = set()
+    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
+
+    for s in synaptomes:
+      experience_state.synaptomes[s.name] = s
+
+
   def command_vocabulary(self):
     # Lists all possible actions that are available in this game.
-    return set(['GO', 'CHECK CAN_GO', 'TURN LEFT', 'TURN RIGHT'])
+    return set(['GO', 'TURN LEFT', 'TURN RIGHT'])
 
 
 
   def get_attemptable_actions(self):
     retval = set()
     retval.add(Action('GO'))
-    retval.add(Action('CHECK CAN_GO'))
     retval.add(Action('TURN LEFT'))
     retval.add(Action('TURN RIGHT'))
 
@@ -109,11 +119,11 @@ class ElMazeGame:
     if 'DEAD' in gs or 'VICTORY' in gs:
       return False
 
-    if cmd.startswith('CHECK'):
-      cmdparts = cmd.split()
-      cmdkey = cmdparts[1]
-      experience_state.checked[cmdkey] = 'FORWARD' in gs
-      return True
+    #if cmd.startswith('CHECK'):
+    #  cmdparts = cmd.split()
+    #  cmdkey = cmdparts[1]
+    #  experience_state.checked[cmdkey] = 'FORWARD' in gs
+    #  return True
 
     if cmd.startswith('TURN'):
       cmdparts = cmd.split()
