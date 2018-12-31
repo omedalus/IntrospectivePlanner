@@ -26,23 +26,33 @@ class Organism:
     while True:
       print('')
       print(self.game)
+      print(vars(self.__exst))
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      a = self.__choose_action()
+      possible_actions = self.__generate_possible_actions()
+
+      a = Organism.__choose_action(possible_actions, self.__exst)
       print(a)
 
-      self.__exst.last_action = a
-
-      self.game.action(a)
+      self.game.command(a.command, self.__exst)
+      self.__exst.last_command = a.command
 
   def __generate_possible_actions(self):
-    possible_actions = ['NORTH', 'SOUTH', 'EAST', 'WEST']
-    return possible_actions
+    return self.game.action_vocabulary()
 
 
-  def __choose_action(self, possible_actions):
-    astr = random.choice(possible_actions)
+  @staticmethod
+  def __choose_action(possible_actions, exst):
+    viable_choices = set()
+    if exst.last_command != 'CAN_GO':
+      viable_choices.add('CAN_GO')
+    elif exst.checked.get('CAN_GO'):
+      viable_choices.add('GO')
+    else:
+      viable_choices.add('TURN LEFT')
+
+    astr = random.choice(list(viable_choices))
     return Action(astr)

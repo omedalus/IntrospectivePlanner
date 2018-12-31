@@ -13,6 +13,9 @@ class ExperienceState:
 
 
   def __init__(self):
+    # The most recent command that the organism sent to the game.
+    self.last_command = None
+
     # Rules that represent which actions can be taken under
     # which circumstances.
     self.action_rules = set()

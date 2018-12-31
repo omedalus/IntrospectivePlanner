@@ -54,11 +54,17 @@ class TeeMazeGame:
     self.__victory_position = num_steps_before_bend + num_steps_after_bend
     self.__bend_position = num_steps_before_bend
 
+
   def __str__(self):
     gs = self.state()
     retval = '#{} {} @{}:'.format(self.turn, self.__orientation, self.__position)
     retval += str(gs)
     return retval
+
+
+  def action_vocabulary(self):
+    # Lists all possible actions that are available in this game.
+    return set(['GO', 'CAN_GO', 'TURN LEFT', 'TURN RIGHT'])
 
 
   def state(self):
