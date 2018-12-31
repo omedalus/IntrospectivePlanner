@@ -38,19 +38,18 @@ def find_turn(startorient, endorient):
 
 
 
-class TeeMazeGame:
+class ElMazeGame:
   """
-  Another stupid-simple game. This one is designed to make the organism
-  learn to turn left when it comes to the end of a hallway of 
-  pre-defined length.
+  Stupid-simple game. The organism must turn left when it comes to 
+  a bend in a hallway.
   """
   def __init__(self, num_steps_before_bend, num_steps_after_bend):
-    self.title = 'Tee Maze Game {}x{}'.format(num_steps_before_bend, num_steps_after_bend)
+    self.title = 'El Maze Game {}x{}'.format(num_steps_before_bend, num_steps_after_bend)
     self.turn = 0
 
     self.__is_alive = True 
     self.__position = 0
-    self.__orientation = random.choice(CARDINALS)
+    self.__orientation = 'NORTH' # random.choice(CARDINALS)
     self.__victory_position = num_steps_before_bend + num_steps_after_bend
     self.__bend_position = num_steps_before_bend
 
@@ -64,14 +63,14 @@ class TeeMazeGame:
 
   def command_vocabulary(self):
     # Lists all possible actions that are available in this game.
-    return set(['GO', 'CAN_GO', 'TURN LEFT', 'TURN RIGHT'])
+    return set(['GO', 'CHECK CAN_GO', 'TURN LEFT', 'TURN RIGHT'])
 
 
 
   def get_attemptable_actions(self):
     retval = set()
     retval.add(Action('GO'))
-    retval.add(Action('CAN_GO'))
+    retval.add(Action('CHECK CAN_GO'))
     retval.add(Action('TURN LEFT'))
     retval.add(Action('TURN RIGHT'))
 
@@ -110,8 +109,10 @@ class TeeMazeGame:
     if 'DEAD' in gs or 'VICTORY' in gs:
       return False
 
-    if cmd == 'CAN_GO':
-      experience_state.checked['CAN_GO'] = 'FORWARD' in gs
+    if cmd.startswith('CHECK'):
+      cmdparts = cmd.split()
+      cmdkey = cmdparts[1]
+      experience_state.checked[cmdkey] = 'FORWARD' in gs
       return True
 
     if cmd.startswith('TURN'):
