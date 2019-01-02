@@ -47,16 +47,28 @@ class Organism:
       self.exst.last_command = a.command
 
 
+  def apply_reinforcement(self, magnitude):
+    # All synaptomes receive the reinforcement!
+    for s in self.exst.synaptomes.values():
+      s.entrenchment += magnitude
+
+
   @staticmethod
   def __cull_random_synaptomes(survival_prob, exst, gs):
     items = list(exst.synaptomes.items())
     for skey, s in items:
       droll = random.random()
-      if droll > survival_prob:
-        del exst.synaptomes[skey]
-        if skey in exst.checked:
-          del exst.checked[skey]
-        exst.actions = set([a for a in exst.actions if a.precondition != skey])
+      if droll <= survival_prob:
+        continue
+
+      s.entrenchment -= 1
+      if s.entrenchment > 0:
+        continue
+
+      del exst.synaptomes[skey]
+      if skey in exst.checked:
+        del exst.checked[skey]
+      exst.actions = set([a for a in exst.actions if a.precondition != skey])
 
       
   @staticmethod

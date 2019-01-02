@@ -16,6 +16,11 @@ class Synaptome:
     # their entrenchment reaches 0.
     self.entrenchment = 0
 
+    # This synaptome may optionally be linked to a command. This is the command
+    # that gains candidacy if this synaptome is fulfilled.
+    # TODO: Actually make it work like that.
+    self.command = None
+
 
     if isinstance(synaptons, Synapton):
       synaptons = [synaptons]
@@ -46,5 +51,6 @@ class Synaptome:
   def __repr__(self):
     synstr = ' && '.join([str(s) for s in self.synaptons])
     retval = self.name + '=<' + synstr + '>'
+    retval += ' (x{})'.format(self.entrenchment)
     return retval
 

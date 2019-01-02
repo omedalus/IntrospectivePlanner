@@ -69,7 +69,6 @@ class ElMazeGame:
     return random.choice(commands)
 
 
-
   def state(self):
     if self.__position >= self.__victory_position:
       return set(['VICTORY'])
