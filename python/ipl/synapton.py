@@ -61,3 +61,32 @@ class Synapton:
       retval += self.value
     return retval
 
+  def __eq__(self, other):
+    if self.basis != other.basis:
+      return False
+    if self.key != other.key:
+      return False
+    if self.value != other.value:
+      return False
+    return True
+
+  def __hash__(self):
+    retstr = ''
+    retstr += str(len(self.basis))
+    retstr += '_'
+    retstr += self.basis
+    if self.key is None:
+      retstr += 'X'
+    else:
+      retstr += str(len(self.key))
+      retstr += '_'
+      retstr += self.key
+    if self.value is None:
+      retstr += 'X'
+    else:
+      retstr += str(len(self.value) if isinstance(self.value, str) else 0)
+      retstr += '_'
+      retstr += str(self.value)
+    return hash(retstr)
+
+

@@ -18,41 +18,102 @@ class Organism:
 
   def __init__(self, game=None):
     self.game = game
-    self.__exst = ExperienceState()
+    self.exst = ExperienceState()
 
   def play(self):
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-    print('Seeding synaptome')
-    self.game.seed_synaptomes(self.__exst)
-
-    print('Seeding actions')
-    self.game.seed_actions(self.__exst)
-
 
     print('Playing game: ' + self.game.title)
     while True:
-      print('')
-      print('Game: ' + str(self.game))
-
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      Organism.__check_synaptomes(self.__exst, gs)
+      Organism.__check_synaptomes(self.exst, gs)
 
-      print('Experience: ' + str(vars(self.__exst)))
+      Organism.__cull_random_synaptomes(0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(1, 0.5, self.exst, gs)
+      Organism.__generate_random_conditioned_actions(1, self.exst, gs)
 
-      attemptable_actions = Organism.__generate_action_candidates(self.__exst)
+      attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
-      a = Organism.__choose_action(attemptable_actions, self.__exst)
+      a = Organism.__choose_action(attemptable_actions, self.exst)
       if not a:
         a = Action(self.game.generate_random_command())
-      print('Chosen Action: ' + str(a))
 
-      self.game.command(a.command, self.__exst)
-      self.__exst.last_command = a.command
+      self.game.command(a.command, self.exst)
+      self.exst.last_command = a.command
+
+
+  @staticmethod
+  def __cull_random_synaptomes(survival_prob, exst, gs):
+    items = list(exst.synaptomes.items())
+    for skey, s in items:
+      droll = random.random()
+      if droll > survival_prob:
+        del exst.synaptomes[skey]
+        if skey in exst.checked:
+          del exst.checked[skey]
+        exst.actions = set([a for a in exst.actions if a.precondition != skey])
+
+      
+  @staticmethod
+  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, exst, gs):
+    checked_synaptomes = list(exst.checked.keys())
+    active_gamestate_atoms = list(gs)
+    for i in range(0, num_to_generate):
+      synaptons = set()
+      randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
+
+      while True: 
+        # Make a new synaptome out of between 1 to 4 synaptons.
+        basis = random.choice(list(Synapton.BASES))
+        if basis == 'GAME':
+          if not len(active_gamestate_atoms):
+            continue
+          keyname = random.choice(active_gamestate_atoms)
+          synapton = Synapton(basis, keyname)
+          synaptons.add(synapton)
+        elif basis == 'CHECKED':
+          if not len(checked_synaptomes):
+            continue
+          keyname = random.choice(checked_synaptomes)
+          value = exst.checked[keyname]
+          synapton = Synapton(basis, keyname, value)
+          synaptons.add(synapton)
+        elif basis == 'LAST_ACTION':
+          if not exst.last_command:
+            continue
+          synapton = Synapton(basis, exst.last_command)
+          synaptons.add(synapton)          
+        else:
+          # Not supported yet, roll again.
+          continue
+      
+        droll = random.random()
+        if droll > prob_add_synapton:
+          break
+
+      synaptome = Synaptome(randname, synaptons)
+      exst.synaptomes[synaptome.name] = synaptome
+
+
+  @staticmethod
+  def __generate_random_conditioned_actions(num_to_generate, exst, gs):
+    if not exst.last_command:
+      return
+    active_checked_synaptomes = [skey for skey,sval in exst.checked.items() if sval]
+    if not len(active_checked_synaptomes):
+      return
+    for i in range(0, num_to_generate):
+      skey = random.choice(active_checked_synaptomes)
+      a = Action(exst.last_command, skey)
+      exst.actions.add(a)
+
+
+
 
 
   @staticmethod
@@ -94,7 +155,6 @@ class Organism:
 
   @staticmethod
   def __choose_action(attemptable_actions, exst):
-    print('Attemptible actions: ' + str(attemptable_actions))
     if not attemptable_actions or not len(attemptable_actions):
       return None
     a = random.choice(list(attemptable_actions))

@@ -18,6 +18,7 @@ class Action:
     # taking the action. Actually, this should probably be an
     # evolvable collection.
 
+
   def __repr__(self):
     prestr = '(T)' if not self.precondition else str(self.precondition)
     retval = prestr + '=>' + self.command
