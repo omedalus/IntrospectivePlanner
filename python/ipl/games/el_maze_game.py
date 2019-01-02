@@ -65,17 +65,23 @@ class ElMazeGame:
 
 
   def seed_synaptomes(self, experience_state):
-    synaptomes = set()
-    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
-    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False)))
-
-    for s in synaptomes:
-      experience_state.synaptomes[s.name] = s
+    pass
+    # synaptomes = set()
+    # synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
+    # synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False)))
+    # for s in synaptomes:
+    #  experience_state.synaptomes[s.name] = s
 
 
   def seed_actions(self, experience_state):
-    experience_state.actions.add(Action('GO', 'CAN_GO'))
-    experience_state.actions.add(Action('TURN LEFT', 'SHOULD_TURN_LEFT'))
+    pass
+    # experience_state.actions.add(Action('GO', 'CAN_GO'))
+    # experience_state.actions.add(Action('TURN LEFT', 'SHOULD_TURN_LEFT'))
+
+
+  def generate_random_command(self):
+    commands = ['GO', 'TURN LEFT', 'TURN RIGHT', 'TURN BACK']
+    return random.choice(commands)
 
 
 

@@ -47,6 +47,8 @@ class Organism:
       attemptable_actions = Organism.__generate_action_candidates(self.__exst)
 
       a = Organism.__choose_action(attemptable_actions, self.__exst)
+      if not a:
+        a = Action(self.game.generate_random_command())
       print('Chosen Action: ' + str(a))
 
       self.game.command(a.command, self.__exst)
@@ -93,5 +95,7 @@ class Organism:
   @staticmethod
   def __choose_action(attemptable_actions, exst):
     print('Attemptible actions: ' + str(attemptable_actions))
+    if not attemptable_actions or not len(attemptable_actions):
+      return None
     a = random.choice(list(attemptable_actions))
     return a
