@@ -16,20 +16,20 @@ class Synapton:
     # if the key is specified instead, then it's presumed to be the
     # value.
 
-    if not basis:
+    if basis is None:
       raise ValueError('basis', 'Basis must be specified.')
 
     if basis not in Synapton.BASES:
       raise ValueError('basis', 'Unknown basis: ' + str(basis))
 
     if basis == 'CHECKED' or basis == 'GAME':
-      if not key:
+      if key is None:
         raise ValueError('key', 'Key must be specified for CHECKED basis.') 
-      if not value:
+      if value is None:
         value = True
     elif basis == 'LAST_ACTION':
       if key:
-        if value:
+        if value is not None:
           raise ValueError('key', 'Cannot specify both key and value for LAST_ACTION basis.')
         else:
           value = key
@@ -54,7 +54,7 @@ class Synapton:
   def __repr__(self):
     retval = self.basis + ':'
     if self.basis == 'CHECKED' or self.basis == 'GAME':
-      if not self.value:
+      if self.value == False:
         retval += '!'
       retval += self.key
     elif self.basis == 'LAST_ACTION':

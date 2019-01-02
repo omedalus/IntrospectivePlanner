@@ -7,14 +7,19 @@ class Action:
   def __init__(self, command=None, precondition=None):
     # Actions may have preconditions, which have to be 
     # fulfilled in order for the action to be eligible for being taken.
-    # The precondition is given as a named synaptome.
+    # The precondition is given as a string specifying a named synaptome.
     self.precondition = precondition
 
     # The action to take.
     self.command = command
 
-  def __str__(self):
-    synaptomestr = '(T)' if not self.synaptome else str(self.synaptome)
-    retval = synaptomestr + '=>' + self.command
+    # NOTE: The action can have game state overrides, which attempt
+    # to describe how the game state will have changed as a result of
+    # taking the action. Actually, this should probably be an
+    # evolvable collection.
+
+  def __repr__(self):
+    prestr = '(T)' if not self.precondition else str(self.precondition)
+    retval = prestr + '=>' + self.command
     return retval
 

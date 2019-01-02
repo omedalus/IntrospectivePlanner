@@ -67,22 +67,15 @@ class ElMazeGame:
   def seed_synaptomes(self, experience_state):
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
+    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False)))
 
     for s in synaptomes:
       experience_state.synaptomes[s.name] = s
 
 
-  def command_vocabulary(self):
-    # Lists all possible actions that are available in this game.
-    return set(['GO', 'TURN LEFT', 'TURN RIGHT'])
-
-
-
-  def get_attemptable_actions(self):
-    retval = set()
-    retval.add(Action('GO'))
-    retval.add(Action('TURN LEFT'))
-    retval.add(Action('TURN RIGHT'))
+  def seed_actions(self, experience_state):
+    experience_state.actions.add(Action('GO', 'CAN_GO'))
+    experience_state.actions.add(Action('TURN LEFT', 'SHOULD_TURN_LEFT'))
 
 
 

@@ -27,3 +27,7 @@ class ExperienceState:
     # or maybe checking synaptomes is itself an action.
     self.synaptomes = {}
 
+    # The actions available to the organism.
+    self.actions = set()
+
+
