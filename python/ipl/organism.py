@@ -20,6 +20,10 @@ class Organism:
     self.game = game
     self.exst = ExperienceState()
 
+    self.exst.synaptomes['CAN_GO'] = Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO')
+    self.exst.synaptomes['SHOULD_TURN_LEFT'] = Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT')
+
+
   def play(self):
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
@@ -33,12 +37,14 @@ class Organism:
 
       Organism.__check_synaptomes(self.exst, gs)
 
-      Organism.__cull_random_synaptomes(0.25, self.exst, gs)
-      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+      #Organism.__cull_random_synaptomes(0.25, self.exst, gs)
+      #Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
 
       attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
       cmd = Organism.__choose_action(attemptable_actions, self.exst)
+      print(gs)
+      print(cmd)
       if not cmd:
         cmd = self.game.generate_random_command()
 
@@ -52,7 +58,7 @@ class Organism:
     # synaptomes that are members of less populous
     # and more parsimonious regimes get rewarded more.
     all_synaptomes = list(self.exst.synaptomes.values())
-    mag_per_syn = magnitude / len(all_synaptomes)
+    mag_per_syn = int(magnitude / len(all_synaptomes))
     for s in all_synaptomes:
       s.entrenchment += mag_per_syn
 
