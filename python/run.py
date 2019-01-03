@@ -18,4 +18,4 @@ for i in range(0, 100):
 
   if 'VICTORY' in game.state():
     print('Applying reinforcement.')
-    organism.apply_reinforcement(100)
+    organism.apply_reinforcement(10)

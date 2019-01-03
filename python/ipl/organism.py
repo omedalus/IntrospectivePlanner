@@ -54,8 +54,10 @@ class Organism:
       self.game.command(cmd, self.exst)
       self.exst.last_command = cmd
 
-      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
-      Organism.__cull_random_synaptomes(0, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(.2, 0.5, 0.5, self.exst, gs)
+      print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
+
+      Organism.__cull_random_synaptomes(0.5, self.exst, gs)
       
 
 
@@ -65,6 +67,8 @@ class Organism:
     # synaptomes that are members of less populous
     # and more parsimonious regimes get rewarded more.
     all_synaptomes = list(self.exst.synaptomes.values())
+    if not len(all_synaptomes):
+      return
     mag_per_syn = int(magnitude / len(all_synaptomes))
     for s in all_synaptomes:
       s.entrenchment += mag_per_syn
@@ -91,7 +95,12 @@ class Organism:
   def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, prob_add_action, exst, gs):
     checked_synaptomes = list(exst.checked.keys())
     active_gamestate_atoms = list(gs)
-    for i in range(0, num_to_generate):
+    while num_to_generate > 0:
+      num_to_generate -= 1
+      if num_to_generate < 0:
+        if random.random() > num_to_generate + 1:
+          break
+
       synaptons = set()
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
 
