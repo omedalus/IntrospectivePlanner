@@ -23,7 +23,7 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    #self.seed_synaptomes(synaptomes, 10)
+    self.seed_synaptomes(synaptomes, 1000)
 
 
   def seed_synaptomes(self, synaptomes, entrenchment):
@@ -44,7 +44,7 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      Organism.__check_synaptomes(2, 4, self.exst, gs)
+      Organism.__check_synaptomes(2, 2, self.exst, gs)
 
       attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
@@ -63,11 +63,11 @@ class Organism:
 
 
   def apply_reinforcement(self, magnitude):
-    # All synaptomes receive the reinforcement!
+    # All active synaptomes receive the reinforcement!
     # Divide equally among all synaptomes, so that
     # synaptomes that are members of less populous
     # and more parsimonious regimes get rewarded more.
-    all_synaptomes = list(self.exst.synaptomes.values())
+    all_synaptomes = self.exst.get_checked_synaptomes()
     if not len(all_synaptomes):
       return
     mag_per_syn = int(magnitude / len(all_synaptomes))

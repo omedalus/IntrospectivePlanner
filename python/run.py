@@ -7,7 +7,7 @@ print('Run#\t#Turns\tSynLen', file=sys.stderr)
 
 organism = ipl.Organism()
 
-for i in range(0, 100):
+for i in range(0, 1000):
   print('')
 
   print('RUN #{}'.format(i + 1))
@@ -26,4 +26,4 @@ for i in range(0, 100):
 
   if 'VICTORY' in game.state():
     #print('Applying reinforcement.')
-    organism.apply_reinforcement(100)
+    organism.apply_reinforcement(10)

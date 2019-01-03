@@ -27,7 +27,7 @@ class ExperienceState:
 
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
-    retval += '\n\tSynaptomes:\n'
+    retval += '\tSynaptomes:\n'
     for s in self.synaptomes.values():
       retval += '\t\t{}\n'.format(s)
     return retval
