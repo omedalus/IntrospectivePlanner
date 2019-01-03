@@ -14,8 +14,9 @@ for i in range(0, 100):
   organism.play()
 
   print('Terminus reached in {} turns.'.format(game.turn))
-  print('Organism experience state: ' + str(vars(organism.exst)))
+  if len(organism.exst.synaptomes) > 2:
+    print('Organism experience state: ' + str(organism.exst))
 
   if 'VICTORY' in game.state():
-    print('Applying reinforcement.')
-    organism.apply_reinforcement(10)
+    #print('Applying reinforcement.')
+    organism.apply_reinforcement(100)

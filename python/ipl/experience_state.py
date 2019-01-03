@@ -28,3 +28,17 @@ class ExperienceState:
     self.synaptomes = {}
 
 
+  def __repr__(self):
+    retval = '\tLast command: {}\n'.format(self.last_command)
+    retval += '\tKnown world state:'
+    for chname, chval in self.checked.items():
+      retval += ' '
+      if not chval:
+        retval += '!'
+      retval += chname
+    retval += '\n\tSynaptomes:\n'
+    for s in self.synaptomes.values():
+      retval += '\t\t{}\n'.format(s)
+    return retval
+
+
