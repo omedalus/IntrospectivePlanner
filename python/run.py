@@ -1,11 +1,13 @@
 
 import ipl
+import sys
 
 print('RUNNING INTROSPECTIVE PLANNER')
+print('Run#\t#Turns\tSynLen', file=sys.stderr)
 
 organism = ipl.Organism()
 
-for i in range(0, 100):
+for i in range(0, 10000):
   print('')
 
   print('RUN #{}'.format(i + 1))
@@ -14,9 +16,14 @@ for i in range(0, 100):
   organism.play()
 
   print('Terminus reached in {} turns.'.format(game.turn))
-  if len(organism.exst.synaptomes) > 2:
-    print('Organism experience state: ' + str(organism.exst))
+  print('Organism experience state: \n' + str(organism.exst))
+
+  print('{}\t{}\t{}'.format(
+    i,
+    game.turn,
+    len(organism.exst.synaptomes)
+  ), file=sys.stderr)
 
   if 'VICTORY' in game.state():
     #print('Applying reinforcement.')
-    organism.apply_reinforcement(100)
+    organism.apply_reinforcement(0)
