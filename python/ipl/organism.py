@@ -36,7 +36,6 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-    print('Playing game: ' + self.game.title)
     self.exst.clear_checkstates()
 
     while True:
@@ -44,7 +43,8 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.check_synaptomes(gs, 4, 10)
+      #self.exst.clear_checkstates(.1)
+      self.exst.check_synaptomes(gs, 2, 2)
 
       cmd = self.exst.choose_command()
       if not cmd:

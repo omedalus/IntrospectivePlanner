@@ -95,6 +95,8 @@ class ExperienceState:
     if random.random() < prob_hailmary:
       return None
     candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
+    if not len(candidate_sms):
+      return None
     winner_sm = random.sample(candidate_sms, 1)[0]
     return winner_sm.command
 
