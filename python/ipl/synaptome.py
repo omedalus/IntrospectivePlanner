@@ -6,7 +6,7 @@ class Synaptome:
   """
   A collection of synaptons.
   """
-  def __init__(self, name, synaptons):
+  def __init__(self, name, synaptons, command=None):
     self.name = name
     self.synaptons = set()
 
@@ -19,7 +19,7 @@ class Synaptome:
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
     # TODO: Actually make it work like that.
-    self.command = None
+    self.command = command
 
 
     if isinstance(synaptons, Synapton):
@@ -52,5 +52,7 @@ class Synaptome:
     synstr = ' && '.join([str(s) for s in self.synaptons])
     retval = self.name + '=<' + synstr + '>'
     retval += ' (x{})'.format(self.entrenchment)
+    if self.command:
+      retval += ' => "{}"'.format(self.command)
     return retval
 

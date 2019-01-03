@@ -5,7 +5,7 @@ print('RUNNING INTROSPECTIVE PLANNER')
 
 organism = ipl.Organism()
 
-for i in range(0, 100):
+for i in range(0, 10):
   print('')
 
   print('RUN #{}'.format(i + 1))

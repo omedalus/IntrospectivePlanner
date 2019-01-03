@@ -33,24 +33,28 @@ class Organism:
 
       Organism.__check_synaptomes(self.exst, gs)
 
-      Organism.__cull_random_synaptomes(0.5, self.exst, gs)
-      Organism.__generate_random_emergent_synaptomes(1, 0.5, self.exst, gs)
-      Organism.__generate_random_conditioned_actions(1, self.exst, gs)
+      Organism.__cull_random_synaptomes(0.25, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
 
       attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
-      a = Organism.__choose_action(attemptable_actions, self.exst)
-      if not a:
-        a = Action(self.game.generate_random_command())
+      cmd = Organism.__choose_action(attemptable_actions, self.exst)
+      if not cmd:
+        cmd = self.game.generate_random_command()
 
-      self.game.command(a.command, self.exst)
-      self.exst.last_command = a.command
+      self.game.command(cmd, self.exst)
+      self.exst.last_command = cmd
 
 
   def apply_reinforcement(self, magnitude):
     # All synaptomes receive the reinforcement!
-    for s in self.exst.synaptomes.values():
-      s.entrenchment += magnitude
+    # Divide equally among all synaptomes, so that
+    # synaptomes that are members of less populous
+    # and more parsimonious regimes get rewarded more.
+    all_synaptomes = list(self.exst.synaptomes.values())
+    mag_per_syn = magnitude / len(all_synaptomes)
+    for s in all_synaptomes:
+      s.entrenchment += mag_per_syn
 
 
   @staticmethod
@@ -68,11 +72,10 @@ class Organism:
       del exst.synaptomes[skey]
       if skey in exst.checked:
         del exst.checked[skey]
-      exst.actions = set([a for a in exst.actions if a.precondition != skey])
 
       
   @staticmethod
-  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, exst, gs):
+  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, prob_add_action, exst, gs):
     checked_synaptomes = list(exst.checked.keys())
     active_gamestate_atoms = list(gs)
     for i in range(0, num_to_generate):
@@ -108,23 +111,12 @@ class Organism:
         if droll > prob_add_synapton:
           break
 
-      synaptome = Synaptome(randname, synaptons)
+      cmd = None
+      if random.random() <= prob_add_action:
+        cmd = exst.last_command
+
+      synaptome = Synaptome(randname, synaptons, cmd)
       exst.synaptomes[synaptome.name] = synaptome
-
-
-  @staticmethod
-  def __generate_random_conditioned_actions(num_to_generate, exst, gs):
-    if not exst.last_command:
-      return
-    active_checked_synaptomes = [skey for skey,sval in exst.checked.items() if sval]
-    if not len(active_checked_synaptomes):
-      return
-    for i in range(0, num_to_generate):
-      skey = random.choice(active_checked_synaptomes)
-      a = Action(exst.last_command, skey)
-      exst.actions.add(a)
-
-
 
 
 
@@ -156,12 +148,15 @@ class Organism:
   @staticmethod
   def __generate_action_candidates(exst):
     retval = set()
-    for a in exst.actions:
-      precondition_met = True
-      if a.precondition:
-        precondition_met = exst.checked.get(a.precondition)
-      if precondition_met:
-        retval.add(a)
+    for skey,sval in exst.checked.items():
+      if not sval:
+        continue
+      sm = exst.synaptomes.get(skey)
+      if not sm:
+        continue
+      if not sm.command:
+        continue
+      retval.add(sm.command)
     return retval
 
 
