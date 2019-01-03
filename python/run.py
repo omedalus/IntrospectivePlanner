@@ -4,19 +4,26 @@ import sys
 
 organism = ipl.Organism()
 
-for i in range(0, 1000):
+turn_total = 0
+
+for i in range(0, 100000):
   game = ipl.games.ElMazeGame(3, 3)
   organism.game = game
   organism.play()
 
-  print('{}\t{}\t{}'.format(
-    i,
-    game.turn,
-    len(organism.exst.synaptomes)
-  ))
+  turn_total += game.turn
+  turn_avg = turn_total / (i + 1)
+
+  if i % 100 == 0:
+    print('{}\t{}\t{}\t{}'.format(
+      i,
+      game.turn,
+      turn_avg,
+      len(organism.exst.synaptomes)
+    ))
 
   if 'VICTORY' in game.state():
-    organism.apply_reinforcement(10)
+    organism.apply_reinforcement(100)
 
 
 print('Organism experience state: \n' + str(organism.exst))

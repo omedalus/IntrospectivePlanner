@@ -23,7 +23,7 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    self.seed_synaptomes(synaptomes, 1000)
+    self.seed_synaptomes(synaptomes, 10)
 
 
   def seed_synaptomes(self, synaptomes, entrenchment):
@@ -43,10 +43,10 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      #self.exst.clear_checkstates(.1)
+      self.exst.clear_checkstates(.1)
       self.exst.check_synaptomes(gs, 2, 2)
 
-      cmd = self.exst.choose_command()
+      cmd = self.exst.choose_command(.1)
       if not cmd:
         cmd = self.game.generate_random_command()
 
@@ -56,7 +56,7 @@ class Organism:
       Organism.__generate_random_emergent_synaptomes(.1, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(0.5, self.exst)
+      Organism.__cull_random_synaptomes(0, self.exst)
       
 
 
