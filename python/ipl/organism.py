@@ -44,7 +44,7 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      Organism.__check_synaptomes(2, 2, self.exst, gs)
+      self.exst.check_synaptomes(gs, 4, 10)
 
       attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
@@ -138,41 +138,6 @@ class Organism:
 
       synaptome = Synaptome(randname, synaptons, cmd)
       exst.synaptomes[synaptome.name] = synaptome
-
-
-
-  @staticmethod
-  def __check_synaptomes(num_check_per_round, num_rounds, experience_state, game_state):
-    # NOTE: For now, checks all synaptomes. In the future,
-    # will run a GA that checks them competitively, because
-    # the collection of all synaptomes will be computationally
-    # infeasible to check directly.
-    # Also, synaptome dependencies can be recursive, so checking them 
-    # exhaustively would result in an infinite loop anyway.    
-    # For now, we will at least shuffle the synaptomes just as a precursor
-    # for making them driven by a GA.
-    for i in range(0, num_rounds):
-      is_dirty = False
-      synaptomes = list(experience_state.synaptomes.values())
-      random.shuffle(synaptomes)
-      synaptomes = synaptomes[:num_check_per_round]
-
-      for s in synaptomes:
-        is_fulfilled = s.is_fulfilled(experience_state, game_state)
-        if s.checkstate != is_fulfilled:
-          is_dirty = True
-        s.checkstate = is_fulfilled
-
-        # If a synaptome has actually been fulfilled, give it a little
-        # bit of reinforcement. This will eventually be equivalent to
-        # a Q-learning factor, and may be a completely separate metric
-        # called "recent_usage" or something. Either way, synaptomes
-        # that have been recently used should be immune from culling.
-        #if is_fulfilled:
-        #  s.entrenchment += 10
-
-      if not is_dirty:
-        break
 
 
   @staticmethod
