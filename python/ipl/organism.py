@@ -46,9 +46,7 @@ class Organism:
 
       self.exst.check_synaptomes(gs, 4, 10)
 
-      attemptable_actions = Organism.__generate_action_candidates(self.exst)
-
-      cmd = Organism.__choose_action(attemptable_actions, self.exst)
+      cmd = self.exst.choose_command()
       if not cmd:
         cmd = self.game.generate_random_command()
 
@@ -58,7 +56,7 @@ class Organism:
       Organism.__generate_random_emergent_synaptomes(.1, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(0.5, self.exst, gs)
+      Organism.__cull_random_synaptomes(0.5, self.exst)
       
 
 
@@ -76,7 +74,7 @@ class Organism:
 
 
   @staticmethod
-  def __cull_random_synaptomes(survival_prob, exst, gs):
+  def __cull_random_synaptomes(survival_prob, exst):
     items = list(exst.synaptomes.items())
     for skey, s in items:
       droll = random.random()
@@ -140,17 +138,3 @@ class Organism:
       exst.synaptomes[synaptome.name] = synaptome
 
 
-  @staticmethod
-  def __generate_action_candidates(exst):
-    retval = list(exst.get_checked_synaptomes(True, True))
-    random.shuffle(retval)
-    retval = [sm.command for sm in retval]
-    return retval
-
-
-  @staticmethod
-  def __choose_action(attemptable_actions, exst):
-    if not attemptable_actions or not len(attemptable_actions):
-      return None
-    a = random.choice(list(attemptable_actions))
-    return a

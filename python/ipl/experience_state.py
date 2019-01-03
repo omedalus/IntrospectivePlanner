@@ -61,19 +61,43 @@ class ExperienceState:
 
 
   def get_checked_synaptomes(self, constraint=None, with_command=False):
-    checked_synaptomes = [s for s in self.synaptomes.values() if s.checkstate is not None]
+    """Returns a collection of checked synaptomes that meet the specified criteria.
+    @param constraint: If set to True or False, returns only synaptomes whose checkstate is True or False, respectively.
+    @param with_command: If set, returns only synaptomes that have a corresponding command.
+    @return: Collection of synaptomes whose checkstate is not None.
+    """
+    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None]
     if constraint is not None:
-      checked_synaptomes = [s for s in checked_synaptomes if s.checkstate == constraint]
+      checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
     if with_command:
-      checked_synaptomes = [s for s in checked_synaptomes if s.command is not None]
+      checked_synaptomes = [sm for sm in checked_synaptomes if sm.command is not None]
     return list(checked_synaptomes)
 
   
+
   def clear_checkstates(self, clear_probability = 1):
-    for s in self.synaptomes.values():
+    """Probabilistically clears the checkstates of currently checked synaptomes, setting them to None.
+    @param clear_probability: The probability for each synaptome to get its checkstate cleared.
+    """
+    for sm in self.get_checked_synaptomes():
       if clear_probability != 1 and random.random() > clear_probability:
         continue
-      s.checkstate = None
+      sm.checkstate = None
+
+
+  def choose_command(self, prob_hailmary=0):
+    """Probabilistically chooses a command from the collection of fulfilled synaptomes.
+    @param prob_hailmary: The probability that we should choose no action at all, and let the game choose for us.
+    @return: Command string, or None.
+    """
+    # NOTE: Maybe the hailmary prob rises as time goes on and no reward is found? Maybe that's what frustration is all about?
+    # NOTE: We can turn this into a GA eventually, possibly, if we have to.
+    if random.random() < prob_hailmary:
+      return None
+    candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
+    winner_sm = random.sample(candidate_sms, 1)[0]
+    return winner_sm.command
+
 
 
 

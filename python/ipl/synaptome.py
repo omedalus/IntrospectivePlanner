@@ -56,11 +56,11 @@ class Synaptome:
 
 
   def is_fulfilled(self, experience_state, game_state):
-    return all(s.is_fulfilled(experience_state, game_state) for s in self.synaptons)
+    return all(sn.is_fulfilled(experience_state, game_state) for sn in self.synaptons)
 
 
   def __repr__(self):
-    synstr = ' && '.join([str(s) for s in self.synaptons])
+    synstr = ' && '.join([str(sn) for sn in self.synaptons])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (x{})'.format(self.entrenchment)
