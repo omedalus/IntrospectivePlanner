@@ -20,8 +20,16 @@ class Organism:
     self.game = game
     self.exst = ExperienceState()
 
-    self.exst.synaptomes['CAN_GO'] = Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO')
-    self.exst.synaptomes['SHOULD_TURN_LEFT'] = Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT')
+    synaptomes = set()
+    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
+    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
+    self.seed_synaptomes(synaptomes, 10)
+
+
+  def seed_synaptomes(self, synaptomes, entrenchment):
+    for s in synaptomes:
+      s.entrenchment = entrenchment
+      self.exst.synaptomes[s.name] = s
 
 
   def play(self):
@@ -35,21 +43,20 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      Organism.__check_synaptomes(self.exst, gs)
-
-      #Organism.__cull_random_synaptomes(0.25, self.exst, gs)
-      #Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+      Organism.__check_synaptomes(2, 4, self.exst, gs)
 
       attemptable_actions = Organism.__generate_action_candidates(self.exst)
 
       cmd = Organism.__choose_action(attemptable_actions, self.exst)
-      print(gs)
-      print(cmd)
       if not cmd:
         cmd = self.game.generate_random_command()
 
       self.game.command(cmd, self.exst)
       self.exst.last_command = cmd
+
+      Organism.__cull_random_synaptomes(0.25, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+      
 
 
   def apply_reinforcement(self, magnitude):
@@ -127,7 +134,7 @@ class Organism:
 
 
   @staticmethod
-  def __check_synaptomes(experience_state, game_state):
+  def __check_synaptomes(num_check_per_round, num_rounds, experience_state, game_state):
     # NOTE: For now, checks all synaptomes. In the future,
     # will run a GA that checks them competitively, because
     # the collection of all synaptomes will be computationally
@@ -136,16 +143,25 @@ class Organism:
     # exhaustively would result in an infinite loop anyway.    
     # For now, we will at least shuffle the synaptomes just as a precursor
     # for making them driven by a GA.
-    for i in range(0, 10):
+    for i in range(0, num_rounds):
       is_dirty = False
       synaptomes = list(experience_state.synaptomes.values())
       random.shuffle(synaptomes)
+      synaptomes = synaptomes[:num_check_per_round]
 
       for s in synaptomes:
         is_fulfilled = s.is_fulfilled(experience_state, game_state)
         if experience_state.checked.get(s.name) != is_fulfilled:
           is_dirty = True
+
         experience_state.checked[s.name] = is_fulfilled
+        # If a synaptome has actually been fulfilled, give it a little
+        # bit of reinforcement. This will eventually be equivalent to
+        # a Q-learning factor, and may be a completely separate metric
+        # called "recent_usage" or something. Either way, synaptomes
+        # that have been recently used should be immune from culling.
+        if is_fulfilled:
+          s.entrenchment += 10
 
       if not is_dirty:
         break
