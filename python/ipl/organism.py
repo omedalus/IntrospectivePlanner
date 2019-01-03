@@ -36,8 +36,9 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-
     print('Playing game: ' + self.game.title)
+    self.exst.clear_checkstates()
+
     while True:
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
@@ -87,13 +88,11 @@ class Organism:
         continue
 
       del exst.synaptomes[skey]
-      if skey in exst.checked:
-        del exst.checked[skey]
 
       
   @staticmethod
   def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, prob_add_action, exst, gs):
-    checked_synaptomes = list(exst.checked.keys())
+    checked_synaptomes = exst.get_checked_synaptomes()
     active_gamestate_atoms = list(gs)
     while num_to_generate > 0:
       num_to_generate -= 1
@@ -105,7 +104,8 @@ class Organism:
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
 
       while True: 
-        # Make a new synaptome out of between 1 to 4 synaptons.
+        # Make a new synaptome, possibly with multiple synaptons, per the 
+        # synapton addition decay rate.
         basis = random.choice(list(Synapton.BASES))
         if basis == 'GAME':
           if not len(active_gamestate_atoms):
@@ -116,9 +116,8 @@ class Organism:
         elif basis == 'CHECKED':
           if not len(checked_synaptomes):
             continue
-          keyname = random.choice(checked_synaptomes)
-          value = exst.checked[keyname]
-          synapton = Synapton(basis, keyname, value)
+          sm = random.choice(checked_synaptomes)
+          synapton = Synapton(basis, sm.name, sm.checkstate)
           synaptons.add(synapton)
         elif basis == 'LAST_ACTION':
           if not exst.last_command:
@@ -160,10 +159,10 @@ class Organism:
 
       for s in synaptomes:
         is_fulfilled = s.is_fulfilled(experience_state, game_state)
-        if experience_state.checked.get(s.name) != is_fulfilled:
+        if s.checkstate != is_fulfilled:
           is_dirty = True
+        s.checkstate = is_fulfilled
 
-        experience_state.checked[s.name] = is_fulfilled
         # If a synaptome has actually been fulfilled, give it a little
         # bit of reinforcement. This will eventually be equivalent to
         # a Q-learning factor, and may be a completely separate metric
@@ -178,16 +177,9 @@ class Organism:
 
   @staticmethod
   def __generate_action_candidates(exst):
-    retval = set()
-    for skey,sval in exst.checked.items():
-      if not sval:
-        continue
-      sm = exst.synaptomes.get(skey)
-      if not sm:
-        continue
-      if not sm.command:
-        continue
-      retval.add(sm.command)
+    retval = list(exst.get_checked_synaptomes(True, True))
+    random.shuffle(retval)
+    retval = [sm.command for sm in retval]
     return retval
 
 

@@ -45,9 +45,10 @@ class Synapton:
     if self.basis == 'GAME':
       return self.key in game_state
     elif self.basis == 'CHECKED':
-      if self.key not in experience_state.checked:
+      s = experience_state.synaptomes.get(self.key)
+      if not s or s.checkstate is None:
         return False
-      return experience_state.checked[self.key] == self.value
+      return s.checkstate == self.value
     elif self.basis == 'LAST_ACTION':
       return experience_state.last_command == self.value
 

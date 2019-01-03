@@ -6,9 +6,16 @@ class Synaptome:
   """
   A collection of synaptons.
   """
-  def __init__(self, name, synaptons, command=None):
+  def __init__(self, name, synaptons, command=None, inhibit=None):
+    # The synaptome's name, for finding in the experience state index.
     self.name = name
+
+    # The synaptons that comprise this synaptome.
     self.synaptons = set()
+
+    # Determines whether or not this synaptome has been checked, and if so,
+    # what its state was at the time at which it was checked.
+    self.checkstate = None
 
     # A counter that gets boosted whenever the synaptome exists while positive
     # reinforcement occurs, and decremented when pain occurs or the synaptome
@@ -18,8 +25,11 @@ class Synaptome:
 
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
-    # TODO: Actually make it work like that.
     self.command = command
+
+    # This synaptome may optionally inhibit another synaptome. If so, it removes
+    # the inhibited synaptome's check from the Checked collection.
+    self.inhibit = inhibit
 
 
     if isinstance(synaptons, Synapton):
@@ -50,7 +60,8 @@ class Synaptome:
 
   def __repr__(self):
     synstr = ' && '.join([str(s) for s in self.synaptons])
-    retval = self.name + '=<' + synstr + '>'
+    chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
+    retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (x{})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
