@@ -54,8 +54,8 @@ class Organism:
       self.game.command(cmd, self.exst)
       self.exst.last_command = cmd
 
-      Organism.__cull_random_synaptomes(0.25, self.exst, gs)
-      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+      Organism.__cull_random_synaptomes(0, self.exst, gs)
+      #Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
       
 
 
