@@ -23,7 +23,7 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    self.seed_synaptomes(synaptomes, 10)
+    self.seed_synaptomes(synaptomes, 100)
 
 
   def seed_synaptomes(self, synaptomes, entrenchment):
@@ -54,8 +54,8 @@ class Organism:
       self.game.command(cmd, self.exst)
       self.exst.last_command = cmd
 
+      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
       Organism.__cull_random_synaptomes(0, self.exst, gs)
-      #Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
       
 
 
@@ -160,8 +160,8 @@ class Organism:
         # a Q-learning factor, and may be a completely separate metric
         # called "recent_usage" or something. Either way, synaptomes
         # that have been recently used should be immune from culling.
-        if is_fulfilled:
-          s.entrenchment += 10
+        #if is_fulfilled:
+        #  s.entrenchment += 10
 
       if not is_dirty:
         break
