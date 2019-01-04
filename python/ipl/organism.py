@@ -44,12 +44,12 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-    self.exst.decay(1, 0, 1)
+    self.exst.decay(1, 0)
 
     stress = 0.01
     while True:
-      stress += 0.01 * (.2 - stress)
-      self.exst.decay(stress, 0, stress)
+      stress += 0.01 * (.1 - stress)
+      self.exst.decay(stress, 0)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
@@ -67,26 +67,25 @@ class Organism:
       Organism.__generate_random_emergent_synaptomes(stress, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(1 - stress, self.exst)
+      Organism.__cull_random_synaptomes(stress * 10, self.exst)
       self.check_garden_path()
       
 
 
   def apply_reinforcement(self, magnitude):
     checked_synaptomes = self.exst.get_checked_synaptomes()
-    total_citation = sum([sm.citation_count for sm in checked_synaptomes])
-    if total_citation <= 0:
+    if not len(checked_synaptomes):
       return
-
+    mag_dist = magnitude / len(checked_synaptomes)
     for sm in checked_synaptomes:
-      sm.entrenchment += magnitude * sm.citation_count / total_citation
+      sm.entrenchment += mag_dist
 
 
   @staticmethod
   def __cull_random_synaptomes(cull_prob, exst):
     items = list(exst.synaptomes.items())
     for skey, sm in items:
-      prob_die = cull_prob / (sm.citation_count + 1)
+      prob_die = cull_prob
 
       droll = random.random()
       if droll > prob_die:

@@ -56,7 +56,6 @@ class ExperienceState:
           is_dirty = True
           sm.checkstate = is_fulfilled
 
-        sm.increment_citation_with_backpropagation(self)
       if not is_dirty:
         break
 
@@ -78,14 +77,14 @@ class ExperienceState:
 
   
 
-  def decay(self, checkstate_decay_prob, entrenchment_decay_prob, citation_decay_prob):
+  def decay(self, checkstate_decay_prob, entrenchment_decay_prob):
     """Probabilistically clears checkstates and decrements entrenchments and citations.
     @param checkstate_decay_prob: The probability for each synaptome to get its checkstate cleared.
     @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
     @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
     """
     for sm in self.get_checked_synaptomes():
-      sm.decay(checkstate_decay_prob, entrenchment_decay_prob, citation_decay_prob)
+      sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
 
 
   def choose_command(self, prob_hailmary=0):
@@ -102,13 +101,6 @@ class ExperienceState:
       return None
     winner_sm = random.sample(candidate_sms, 1)[0]
     winner_cmd = winner_sm.command
-
-    # All candidates that were going to give the same command deserve 
-    # attribution as well.
-    for cdsm in candidate_sms:
-      if cdsm.command == winner_cmd:
-        cdsm.increment_citation_with_backpropagation(self)
-
     return winner_cmd
 
 

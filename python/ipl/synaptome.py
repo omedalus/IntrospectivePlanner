@@ -24,11 +24,6 @@ class Synaptome:
     # their entrenchment reaches 0.
     self.entrenchment = 0
 
-    # A counter that gets boosted every time another synaptome checks this one,
-    # or this synaptome's action gets performed. A synaptome's portion of the
-    # payout is partly determined by how many citations it's received.
-    self.citation_count = 0
-
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
     self.command = command
@@ -59,22 +54,9 @@ class Synaptome:
 
   def is_fulfilled(self, experience_state, game_state):
     return all(sn.is_fulfilled(experience_state, game_state) for sn in self.synaptons)
-
-
-  def increment_citation_with_backpropagation(self,  experience_state):
-    """Increments the citation of this synaptome and all of its immediate dependencies. Does not recurse.
-    """
-    self.citation_count += 1
-    for sn in self.synaptons:
-      if sn.basis != 'CHECKED':
-        continue
-      sm = experience_state.synaptomes.get(sn.key)
-      if not sm:
-        continue
-      sm.citation_count += 1
       
 
-  def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, citation_decay_prob=0):
+  def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0):
     if random.random() < checkstate_decay_prob:
       self.checkstate = None
 
@@ -83,19 +65,13 @@ class Synaptome:
       self.entrenchment -= 1
       if self.entrenchment < 0:
         self.entrenchment = 0
-
-    if self.citation_count > 0 and random.random() < citation_decay_prob:
-      #self.citation_count *= random.random()
-      self.citation_count -= 1
-      if self.citation_count < 0:
-        self.citation_count = 0
     
 
 
   def __repr__(self):
     synstr = ' && '.join([str(sn) for sn in self.synaptons])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
-    retval = '{}({})(+{})=<{}>'.format(self.name, chstr, self.citation_count, synstr)
+    retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (x{})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
