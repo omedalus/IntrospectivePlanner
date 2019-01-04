@@ -39,7 +39,7 @@ class ExperienceState:
     @param num_checks_per_round: How many synaptomes to check in each round.
     @param num_rounds: Maximum number of rounds to check.
     """
-    unsuppressed_sms = list([sm for sm in self.synaptomes.values() if not sm.is_suppressed])
+    unsuppressed_sms = list([sm for sm in self.synaptomes.values() if sm.entrenchment > 0])
     if not len(unsuppressed_sms):
       return
 
@@ -68,7 +68,7 @@ class ExperienceState:
     @param with_command: If set, returns only synaptomes that have a corresponding command.
     @return: Collection of synaptomes whose checkstate is not None.
     """
-    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None and not sm.is_suppressed]
+    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None and sm.entrenchment > 0]
     if constraint is not None:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
     if with_command:

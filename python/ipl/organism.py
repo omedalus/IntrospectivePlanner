@@ -50,7 +50,6 @@ class Organism:
     while True:
       # Desperation slowly climbs the longer the game goes on.
       #stress += 0.01 * (.1 - stress)
-      #self.exst.decay(stress, 0)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
@@ -63,10 +62,13 @@ class Organism:
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       self.game.command(cmd, self.exst)
 
-      generated_sms = Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
-      for sm in generated_sms:
-        sm.is_suppressed = True
-      print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
+      # The odds of generating new synaptomes rise as desperation rises.
+      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+
+
+      # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
+      self.exst.decay(desperation, desperation)
+
 
       #Organism.__cull_random_synaptomes((1 - stress)*.1, self.exst)
       self.check_garden_path()
@@ -92,15 +94,11 @@ class Organism:
       if droll > prob_die:
         continue
 
-      sm.decay(entrenchment_decay_prob=cull_prob)
-      if sm.entrenchment > 0:
+      if sm.entrenchment <= 0:
+        del exst.synaptomes[skey]
         continue
 
-      was_already_suppressed = sm.is_suppressed
-      if not was_already_suppressed:
-        sm.is_suppressed = True
-      else:
-        del exst.synaptomes[skey]
+      sm.decay(entrenchment_decay_prob=cull_prob)
 
       
   @staticmethod
@@ -115,10 +113,11 @@ class Organism:
         if random.random() >= num_to_generate + 1:
           break
 
-      suppressed_sms = [sm for sm in exst.synaptomes.values() if sm.is_suppressed]
-      if len(suppressed_sms):
-        sm = random.choice(suppressed_sms)
-        sm.is_suppressed = False
+      deentrenched_sms = [sm for sm in exst.synaptomes.values() if sm.entrenchment <= 0]
+      if len(deentrenched_sms):
+        sm = random.choice(deentrenched_sms)
+        # We'll increment your entrenchment at the end of this function.
+        # Y'all have ONE more chance to prove yourselves useful.
         generated_sms.add(sm)
         continue
 
@@ -162,6 +161,11 @@ class Organism:
       exst.synaptomes[sm.name] = sm
       generated_sms.add(sm)
       
+    for sm in generated_sms:
+      # Freshly generated (or reactivated) synaptomes get to start with the bare
+      # minimum level of entrenchment. Better not squander it.
+      sm.entrenchment = 1
+
     return generated_sms
       
 

@@ -6,7 +6,7 @@ organism = ipl.Organism()
 
 turn_total = 0
 
-for i in range(0, 2):
+for i in range(0, 1000):
   game = ipl.games.ElMazeGame(3, 3)
   organism.game = game
   organism.play()
@@ -15,11 +15,12 @@ for i in range(0, 2):
   turn_avg = turn_total / (i + 1)
 
   if i % 1 == 0:
-    print('{}\t{}\t{}\t{}'.format(
+    print('{}\t{}\t{}\t{}\t{}'.format(
       i,
       game.turn,
       turn_avg,
-      len(organism.exst.synaptomes)
+      len(organism.exst.synaptomes),
+      len([sm for sm in organism.exst.synaptomes.values() if sm.entrenchment > 0])
     ))
 
   if 'VICTORY' in game.state():
