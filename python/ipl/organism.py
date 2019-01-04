@@ -23,7 +23,15 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    self.seed_synaptomes(synaptomes, 10)
+    #self.seed_synaptomes(synaptomes, 10)
+    self.fell_off_garden_path = set()
+
+
+  def check_garden_path(self):
+    for gp in ['CAN_GO', 'SHOULD_TURN_LEFT']:
+      if gp not in self.exst.synaptomes and gp not in self.fell_off_garden_path:
+        print('{} got deleted!'.format(gp))
+        self.fell_off_garden_path.add(gp)
 
 
   def seed_synaptomes(self, synaptomes, entrenchment):
@@ -38,25 +46,29 @@ class Organism:
 
     self.exst.clear_checkstates()
 
+    stress = 0
     while True:
+      stress += 0.01
+
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.clear_checkstates(.1)
-      self.exst.check_synaptomes(gs, 2, 2)
+      self.exst.clear_checkstates(1 - stress)
+      self.exst.check_synaptomes(gs, 10, 10)
 
-      cmd = self.exst.choose_command(.1)
+      cmd = self.exst.choose_command(stress)
       if not cmd:
         cmd = self.game.generate_random_command()
 
       self.game.command(cmd, self.exst)
       self.exst.last_command = cmd
 
-      Organism.__generate_random_emergent_synaptomes(.1, 0.5, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(stress, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(0, self.exst)
+      Organism.__cull_random_synaptomes(0.5, self.exst)
+      self.check_garden_path()
       
 
 
