@@ -81,5 +81,7 @@ class Synaptome:
     retval += ' (x{})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
+    if self.is_suppressed:
+      retval = 'X-' + retval
     return retval
 

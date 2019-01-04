@@ -6,7 +6,7 @@ organism = ipl.Organism()
 
 turn_total = 0
 
-for i in range(0, 10000):
+for i in range(0, 2):
   game = ipl.games.ElMazeGame(3, 3)
   organism.game = game
   organism.play()
@@ -14,7 +14,7 @@ for i in range(0, 10000):
   turn_total += game.turn
   turn_avg = turn_total / (i + 1)
 
-  if i % 100 == 0:
+  if i % 1 == 0:
     print('{}\t{}\t{}\t{}'.format(
       i,
       game.turn,

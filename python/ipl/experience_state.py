@@ -39,16 +39,17 @@ class ExperienceState:
     @param num_checks_per_round: How many synaptomes to check in each round.
     @param num_rounds: Maximum number of rounds to check.
     """
+    unsuppressed_sms = list([sm for sm in self.synaptomes.values() if not sm.is_suppressed])
+    if not len(unsuppressed_sms):
+      return
+
     num_rounds = int(num_rounds)
     while num_rounds > 0:
       num_rounds -= 1
       is_dirty = False
 
-      sm_to_test = []
-      if len(self.synaptomes) <= num_checks_per_round:
-        sm_to_test = self.synaptomes.values()
-      else:
-        sm_to_test = random.sample(set(self.synaptomes.values()), num_checks_per_round)
+      random.shuffle(unsuppressed_sms)
+      sm_to_test =unsuppressed_sms [:num_checks_per_round]
 
       for sm in sm_to_test:
         is_fulfilled = sm.is_fulfilled(self, game_state)
