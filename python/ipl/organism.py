@@ -44,17 +44,17 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-    self.exst.clear_checkstates()
+    self.exst.decay(1, 0, 1)
 
-    stress = 0
+    stress = 0.01
     while True:
-      stress += 0.01
+      stress += 0.01 * (.2 - stress)
+      self.exst.decay(stress, 0, stress)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.clear_checkstates(1 - stress)
       self.exst.check_synaptomes(gs, 10, 10)
 
       cmd = self.exst.choose_command(stress)
@@ -67,34 +67,33 @@ class Organism:
       Organism.__generate_random_emergent_synaptomes(stress, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(0.5, self.exst)
+      Organism.__cull_random_synaptomes(1 - stress, self.exst)
       self.check_garden_path()
       
 
 
   def apply_reinforcement(self, magnitude):
-    # All active synaptomes receive the reinforcement!
-    # Divide equally among all synaptomes, so that
-    # synaptomes that are members of less populous
-    # and more parsimonious regimes get rewarded more.
-    all_synaptomes = self.exst.get_checked_synaptomes()
-    if not len(all_synaptomes):
+    checked_synaptomes = self.exst.get_checked_synaptomes()
+    total_citation = sum([sm.citation_count for sm in checked_synaptomes])
+    if total_citation <= 0:
       return
-    mag_per_syn = int(magnitude / len(all_synaptomes))
-    for s in all_synaptomes:
-      s.entrenchment += mag_per_syn
+
+    for sm in checked_synaptomes:
+      sm.entrenchment += magnitude * sm.citation_count / total_citation
 
 
   @staticmethod
-  def __cull_random_synaptomes(survival_prob, exst):
+  def __cull_random_synaptomes(cull_prob, exst):
     items = list(exst.synaptomes.items())
-    for skey, s in items:
+    for skey, sm in items:
+      prob_die = cull_prob / (sm.citation_count + 1)
+
       droll = random.random()
-      if droll <= survival_prob:
+      if droll > prob_die:
         continue
 
-      s.entrenchment -= 1
-      if s.entrenchment > 0:
+      sm.decay(entrenchment_decay_prob=cull_prob)
+      if sm.entrenchment > 0:
         continue
 
       del exst.synaptomes[skey]

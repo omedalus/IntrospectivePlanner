@@ -55,6 +55,8 @@ class ExperienceState:
         if is_fulfilled != sm.checkstate:
           is_dirty = True
           sm.checkstate = is_fulfilled
+
+        sm.increment_citation_with_backpropagation(self)
       if not is_dirty:
         break
 
@@ -71,18 +73,19 @@ class ExperienceState:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
     if with_command:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.command is not None]
-    return list(checked_synaptomes)
+    checked_synaptomes = list(checked_synaptomes)
+    return checked_synaptomes
 
   
 
-  def clear_checkstates(self, clear_probability = 1):
-    """Probabilistically clears the checkstates of currently checked synaptomes, setting them to None.
-    @param clear_probability: The probability for each synaptome to get its checkstate cleared.
+  def decay(self, checkstate_decay_prob, entrenchment_decay_prob, citation_decay_prob):
+    """Probabilistically clears checkstates and decrements entrenchments and citations.
+    @param checkstate_decay_prob: The probability for each synaptome to get its checkstate cleared.
+    @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
+    @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
     """
     for sm in self.get_checked_synaptomes():
-      if clear_probability != 1 and random.random() > clear_probability:
-        continue
-      sm.checkstate = None
+      sm.decay(checkstate_decay_prob, entrenchment_decay_prob, citation_decay_prob)
 
 
   def choose_command(self, prob_hailmary=0):
@@ -98,7 +101,15 @@ class ExperienceState:
     if not len(candidate_sms):
       return None
     winner_sm = random.sample(candidate_sms, 1)[0]
-    return winner_sm.command
+    winner_cmd = winner_sm.command
+
+    # All candidates that were going to give the same command deserve 
+    # attribution as well.
+    for cdsm in candidate_sms:
+      if cdsm.command == winner_cmd:
+        cdsm.increment_citation_with_backpropagation(self)
+
+    return winner_cmd
 
 
 
