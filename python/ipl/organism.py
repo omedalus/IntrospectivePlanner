@@ -150,7 +150,11 @@ class Organism:
     for sm in generated_sms:
       # Freshly generated (or reactivated) synaptomes get to start with an average
       # level of entrenchment. Better not squander it.
-      sm.entrenchment = statistics.mean([sm.entrenchment for sm in exst.get_entrenched_synaptomes()])
+      entch_sms = exst.get_entrenched_synaptomes()
+      if not len(entch_sms):
+        sm.entrenchment = 1
+      else:
+        sm.entrenchment = statistics.mean([sm.entrenchment for sm in entch_sms])
 
     return generated_sms
       
