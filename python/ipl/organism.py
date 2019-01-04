@@ -46,28 +46,27 @@ class Organism:
 
     self.exst.decay(1, 0)
 
-    stress = 0.01
+    desperation = 0.05
     while True:
-      stress += 0.01 * (.1 - stress)
-      self.exst.decay(stress, 0)
+      # Desperation slowly climbs the longer the game goes on.
+      #stress += 0.01 * (.1 - stress)
+      #self.exst.decay(stress, 0)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.check_synaptomes(gs, 10, 10)
+      self.exst.check_synaptomes(gs, 2, 3)
 
-      cmd = self.exst.choose_command(stress)
-      if not cmd:
-        cmd = self.game.generate_random_command()
-
+      # The odds of just performing a Hail Mary are proportional
+      # to the amount of desperation being experienced by the organism.
+      cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       self.game.command(cmd, self.exst)
-      self.exst.last_command = cmd
 
-      Organism.__generate_random_emergent_synaptomes(stress, 0.5, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(0, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes((1 - stress)*.5, self.exst)
+      #Organism.__cull_random_synaptomes((1 - stress)*.1, self.exst)
       self.check_garden_path()
       
 
@@ -95,7 +94,11 @@ class Organism:
       if sm.entrenchment > 0:
         continue
 
-      del exst.synaptomes[skey]
+      was_already_suppressed = sm.is_suppressed
+      if not was_already_suppressed:
+        sm.is_suppressed = True
+      else:
+        del exst.synaptomes[skey]
 
       
   @staticmethod
@@ -107,6 +110,12 @@ class Organism:
       if num_to_generate < 0:
         if random.random() >= num_to_generate + 1:
           break
+
+      suppressed_sms = [sm for sm in exst.synaptomes.values() if sm.is_suppressed]
+      if len(suppressed_sms):
+        sm = random.choice(suppressed_sms)
+        sm.is_suppressed = False
+        continue
 
       synaptons = set()
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))

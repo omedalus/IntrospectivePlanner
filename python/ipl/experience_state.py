@@ -67,7 +67,7 @@ class ExperienceState:
     @param with_command: If set, returns only synaptomes that have a corresponding command.
     @return: Collection of synaptomes whose checkstate is not None.
     """
-    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None]
+    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None and not sm.is_suppressed]
     if constraint is not None:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
     if with_command:
@@ -87,20 +87,27 @@ class ExperienceState:
       sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
 
 
-  def choose_command(self, prob_hailmary=0):
-    """Probabilistically chooses a command from the collection of fulfilled synaptomes.
+  def choose_command(self, prob_hailmary=0, fn_hailmary=None):
+    """Probabilistically chooses a command from the collection of fulfilled synaptomes. Automatically sets self.last_command.
     @param prob_hailmary: The probability that we should choose no action at all, and let the game choose for us.
+    @param fn_hailmary: A function that randomly generates a command when a hailmary is rolled.
     @return: Command string, or None.
     """
     # NOTE: Maybe the hailmary prob rises as time goes on and no reward is found? Maybe that's what frustration is all about?
     # NOTE: We can turn this into a GA eventually, possibly, if we have to.
-    if random.random() < prob_hailmary:
-      return None
-    candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
-    if not len(candidate_sms):
-      return None
-    winner_sm = random.sample(candidate_sms, 1)[0]
-    winner_cmd = winner_sm.command
+    winner_cmd = None
+    is_hailmary = random.random() < prob_hailmary
+
+    if not is_hailmary:
+      candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
+      if len(candidate_sms):
+        winner_sm = random.sample(candidate_sms, 1)[0]
+        winner_cmd = winner_sm.command
+
+    if not winner_cmd and fn_hailmary:
+      winner_cmd = fn_hailmary()
+
+    self.last_command = winner_cmd
     return winner_cmd
 
 
