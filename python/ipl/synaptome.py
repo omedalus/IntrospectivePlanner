@@ -56,13 +56,12 @@ class Synaptome:
     return all(sn.is_fulfilled(experience_state, game_state) for sn in self.synaptons)
       
 
-  def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0):
+  def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
     if random.random() < checkstate_decay_prob:
       self.checkstate = None
 
-    if self.entrenchment > 0 and random.random() < entrenchment_decay_prob:
-      #self.entrenchment *= .95
-      self.entrenchment -= 1
+    if random.random() < entrenchment_decay_prob:
+      self.entrenchment -= entrenchment_decay_amount
       if self.entrenchment < 0:
         self.entrenchment = 0
     
@@ -75,7 +74,5 @@ class Synaptome:
     retval += ' (x{})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
-    if self.entrenchment <= 0:
-      retval = 'X-' + retval
     return retval
 

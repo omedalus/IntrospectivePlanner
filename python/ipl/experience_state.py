@@ -1,5 +1,6 @@
 
 import random
+import statistics
 
 class ExperienceState:
   """
@@ -28,19 +29,21 @@ class ExperienceState:
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
     retval += '\tSynaptomes:\n'
-    for s in self.synaptomes.values():
-      retval += '\t\t{}\n'.format(s)
+    for sm in [sm for sm in self.synaptomes.values() if sm in self.get_entrenched_synaptomes()]:
+      retval += '\t\t{}\n'.format(sm)
+    for sm in [sm for sm in self.synaptomes.values() if sm not in self.get_entrenched_synaptomes()]:
+      retval += '\t\t{}\n'.format(sm)
     return retval
 
 
   def check_synaptomes(self, game_state, num_checks_per_round, num_rounds):
-    """Sets the checked flag on randomly selected synaptomes.
+    """Sets the checked flag on randomly selected synaptomes. Only checks entrenched synaptomes.
     @param game_state: A set of atoms that are true in the world.
     @param num_checks_per_round: How many synaptomes to check in each round.
     @param num_rounds: Maximum number of rounds to check.
     """
-    unsuppressed_sms = list([sm for sm in self.synaptomes.values() if sm.entrenchment > 0])
-    if not len(unsuppressed_sms):
+    entched_sms = list(self.get_entrenched_synaptomes())
+    if not len(entched_sms):
       return
 
     num_rounds = int(num_rounds)
@@ -54,14 +57,33 @@ class ExperienceState:
       # will pick up synaptomes with changes that we didn't catch
       # in this round.
 
-      random.shuffle(unsuppressed_sms)
-      sm_to_test = unsuppressed_sms[:num_checks_per_round]
+      random.shuffle(entched_sms)
+      sm_to_test = entched_sms[:num_checks_per_round]
 
       for sm in sm_to_test:
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
           sm.checkstate = is_fulfilled
 
+
+  def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=.5, inverse=False):
+    """Returns all synaptomes whose entrenchment level is nonzero and above the one specified.
+    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptomes, this is a synaptome's min required entrenchment.
+    @param inverse: If True, returns only *de*entrenched synaptomes that *don't* make the cutoff.
+    @return: Set of all synaptomes above the cutoff.
+    """
+    if entrenchment_cutoff_fraction > 1 or entrenchment_cutoff_fraction < 0:
+      raise ValueError('entrenchment_cutoff_fraction', 'Fraction must be between 0 and 1.')
+    max_entch = max([sm.entrenchment for sm in self.synaptomes.values()])
+    entch_cutoff = entrenchment_cutoff_fraction * max_entch
+
+    entched_sms = []
+    if not inverse:
+      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment > entch_cutoff]
+    else:
+      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment <= entch_cutoff]
+      
+    return set(entched_sms)
 
 
 
@@ -71,7 +93,7 @@ class ExperienceState:
     @param with_command: If set, returns only synaptomes that have a corresponding command.
     @return: Collection of synaptomes whose checkstate is not None.
     """
-    checked_synaptomes = [sm for sm in self.synaptomes.values() if sm.checkstate is not None and sm.entrenchment > 0]
+    checked_synaptomes = [sm for sm in self.get_entrenched_synaptomes() if sm.checkstate is not None]
     if constraint is not None:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
     if with_command:
@@ -87,10 +109,19 @@ class ExperienceState:
     @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
     @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
     """
-    for sm in self.get_checked_synaptomes():
+    for sm in self.synaptomes.values():
       sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
-      if sm.entrenchment <= 0 and random.random() < entrenchment_decay_prob:
-        del self.synaptomes[sm.name]
+
+    # In a separate step, probabilistically delete all deentrenched synaptomes.
+    # Maybe they were *just* deentrenched, or maybe they had been deentrenched for a
+    # while, but either way, they need to be cleaned up.
+    # We need to store them off because we can't change dictionary during iteration.
+    smkeys_to_delete = set()
+    for sm in self.get_entrenched_synaptomes(entrenchment_decay_prob, True):
+      if random.random() < entrenchment_decay_prob:
+        smkeys_to_delete.add(sm.name)
+    for smkey in smkeys_to_delete:
+      del self.synaptomes[smkey]
 
 
 

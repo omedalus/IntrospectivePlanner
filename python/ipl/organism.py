@@ -8,6 +8,7 @@ from .synaptome import Synaptome
 from .action import Action
 
 import random
+import statistics
 
 
 class Organism:
@@ -70,7 +71,6 @@ class Organism:
       self.exst.decay(desperation, desperation)
 
 
-      #Organism.__cull_random_synaptomes((1 - stress)*.1, self.exst)
       self.check_garden_path()
       
 
@@ -83,22 +83,6 @@ class Organism:
     for sm in checked_synaptomes:
       sm.entrenchment += mag_dist
 
-
-  @staticmethod
-  def __cull_random_synaptomes(cull_prob, exst):
-    items = list(exst.synaptomes.items())
-    for skey, sm in items:
-      prob_die = cull_prob
-
-      droll = random.random()
-      if droll > prob_die:
-        continue
-
-      if sm.entrenchment <= 0:
-        del exst.synaptomes[skey]
-        continue
-
-      sm.decay(entrenchment_decay_prob=cull_prob)
 
       
   @staticmethod
@@ -113,7 +97,7 @@ class Organism:
         if random.random() >= num_to_generate + 1:
           break
 
-      deentrenched_sms = [sm for sm in exst.synaptomes.values() if sm.entrenchment <= 0]
+      deentrenched_sms = exst.get_entrenched_synaptomes(inverse=True)
       if len(deentrenched_sms):
         sm = random.choice(deentrenched_sms)
         # We'll increment your entrenchment at the end of this function.
@@ -164,9 +148,9 @@ class Organism:
       generated_sms.add(sm)
       
     for sm in generated_sms:
-      # Freshly generated (or reactivated) synaptomes get to start with the bare
-      # minimum level of entrenchment. Better not squander it.
-      sm.entrenchment = 1
+      # Freshly generated (or reactivated) synaptomes get to start with an average
+      # level of entrenchment. Better not squander it.
+      sm.entrenchment = statistics.mean([sm.entrenchment for sm in exst.get_entrenched_synaptomes()])
 
     return generated_sms
       
