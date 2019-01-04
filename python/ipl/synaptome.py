@@ -28,6 +28,10 @@ class Synaptome:
     # that gains candidacy if this synaptome is fulfilled.
     self.command = command
 
+    # Is this synaptome actively being suppressed. Suppression is a precursor
+    # to deletion.
+    self.is_suppressed = False
+
     # This synaptome may optionally inhibit another synaptome. If so, it removes
     # the inhibited synaptome's check from the Checked collection.
     # NOTE: This isn't a thing yet.
@@ -53,6 +57,8 @@ class Synaptome:
 
 
   def is_fulfilled(self, experience_state, game_state):
+    if self.is_suppressed:
+      return False
     return all(sn.is_fulfilled(experience_state, game_state) for sn in self.synaptons)
       
 

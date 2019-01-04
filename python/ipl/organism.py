@@ -23,7 +23,7 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    #self.seed_synaptomes(synaptomes, 10)
+    self.seed_synaptomes(synaptomes, 10)
     self.fell_off_garden_path = set()
 
 
@@ -67,7 +67,7 @@ class Organism:
       Organism.__generate_random_emergent_synaptomes(stress, 0.5, 0.5, self.exst, gs)
       # print('Num synaptomes: {}'.format(len(self.exst.synaptomes)))
 
-      Organism.__cull_random_synaptomes(stress * 10, self.exst)
+      Organism.__cull_random_synaptomes((1 - stress)*.5, self.exst)
       self.check_garden_path()
       
 
@@ -100,12 +100,12 @@ class Organism:
       
   @staticmethod
   def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, prob_add_action, exst, gs):
-    checked_synaptomes = exst.get_checked_synaptomes()
+    all_synaptomes = list(exst.synaptomes.values())
     active_gamestate_atoms = list(gs)
     while num_to_generate > 0:
       num_to_generate -= 1
       if num_to_generate < 0:
-        if random.random() > num_to_generate + 1:
+        if random.random() >= num_to_generate + 1:
           break
 
       synaptons = set()
@@ -122,9 +122,9 @@ class Organism:
           synapton = Synapton(basis, keyname)
           synaptons.add(synapton)
         elif basis == 'CHECKED':
-          if not len(checked_synaptomes):
+          if not len(all_synaptomes):
             continue
-          sm = random.choice(checked_synaptomes)
+          sm = random.choice(all_synaptomes)
           synapton = Synapton(basis, sm.name, sm.checkstate)
           synaptons.add(synapton)
         elif basis == 'LAST_ACTION':
