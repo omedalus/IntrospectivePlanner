@@ -49,21 +49,26 @@ class Organism:
     desperation = 0
     while True:
       # Desperation slowly climbs the longer the game goes on.
-      #stress += 0.01 * (.1 - stress)
+      desperation += 0.01 * (.1 - desperation)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.check_synaptomes(gs, 2, 3)
+      self.exst.check_synaptomes(gs, 4, 10)
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
-      cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
+      last_command = self.exst.last_command
+      cmd = self.exst.choose_command(0, self.game.generate_random_command)
       self.game.command(cmd, self.exst)
 
+      if cmd == 'TURN LEFT' and last_command == 'TURN LEFT':
+        raise AssertionError()
+
       # The odds of generating new synaptomes rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(1, 0.5, 0.5, self.exst, gs)
+      if len(self.exst.synaptomes) < 3:
+        ssss = Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.5, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
@@ -141,6 +146,8 @@ class Organism:
           synapton = Synapton(basis, sm.name, sm.checkstate)
           synaptons.add(synapton)
         elif basis == 'LAST_ACTION':
+          # The logic for this is kinda wonky. Save it for later.
+          continue
           if not exst.last_command:
             continue
           synapton = Synapton(basis, exst.last_command)

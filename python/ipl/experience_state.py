@@ -46,19 +46,22 @@ class ExperienceState:
     num_rounds = int(num_rounds)
     while num_rounds > 0:
       num_rounds -= 1
-      is_dirty = False
+      # NOTE: We used to check a dirty flag here, and shortcut
+      # the rounds if nothing was changed this round. Turns out
+      # that's not a great thing to do, because we didn't necessarily
+      # sample all synaptomes in this round (we in fact probably didn't),
+      # so we should perform more rounds because subsequent rounds
+      # will pick up synaptomes with changes that we didn't catch
+      # in this round.
 
       random.shuffle(unsuppressed_sms)
-      sm_to_test =unsuppressed_sms [:num_checks_per_round]
+      sm_to_test = unsuppressed_sms[:num_checks_per_round]
 
       for sm in sm_to_test:
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
-          is_dirty = True
           sm.checkstate = is_fulfilled
 
-      if not is_dirty:
-        break
 
 
 
@@ -86,6 +89,9 @@ class ExperienceState:
     """
     for sm in self.get_checked_synaptomes():
       sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
+      if sm.entrenchment <= 0 and random.random() < entrenchment_decay_prob:
+        del self.synaptomes[sm.name]
+
 
 
   def choose_command(self, prob_hailmary=0, fn_hailmary=None):
