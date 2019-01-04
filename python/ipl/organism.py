@@ -55,20 +55,15 @@ class Organism:
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
-      self.exst.check_synaptomes(gs, 4, 10)
+      self.exst.check_synaptomes(gs, 4, 5)
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
-      last_command = self.exst.last_command
-      cmd = self.exst.choose_command(0, self.game.generate_random_command)
+      cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       self.game.command(cmd, self.exst)
 
-      if cmd == 'TURN LEFT' and last_command == 'TURN LEFT':
-        raise AssertionError()
-
       # The odds of generating new synaptomes rise as desperation rises.
-      if len(self.exst.synaptomes) < 3:
-        ssss = Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.5, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.

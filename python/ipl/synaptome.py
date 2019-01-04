@@ -61,7 +61,7 @@ class Synaptome:
       self.checkstate = None
 
     if self.entrenchment > 0 and random.random() < entrenchment_decay_prob:
-      #self.entrenchment *= random.random()
+      #self.entrenchment *= .95
       self.entrenchment -= 1
       if self.entrenchment < 0:
         self.entrenchment = 0
