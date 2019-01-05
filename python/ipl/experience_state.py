@@ -116,6 +116,7 @@ class ExperienceState:
 
   def decay(self, checkstate_decay_prob, entrenchment_decay_prob):
     """Probabilistically clears checkstates and decrements entrenchments and citations.
+    NOTE: This could be part of a sleep cycle.
     @param checkstate_decay_prob: The probability for each synaptome to get its checkstate cleared.
     @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
     @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
@@ -139,6 +140,27 @@ class ExperienceState:
 
     if not len(self.synaptomes):
       raise AssertionError('Should not be able to delete last synaptome! Deleted {}'.format(smkeys_to_delete))
+
+
+
+  def delete_orphaned_dependencies(self, num_rounds=1):
+    """Remove synaptomes that are dependent on synaptomes that no longer exist.
+    NOTE: This could be part of a sleep cycle.
+    @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 
+    are removed in one round may leave other synaptomes orphaned and primed for removal in subsequent
+    rounds.
+    """
+    while num_rounds > 0:
+      num_rounds -= 1
+
+      smkeys_to_delete = set()
+      for smkey, sm in self.synaptomes.items():
+        depnames = sm.get_named_synaptome_dependencies()
+        for depname in depnames:
+          if depname not in self.synaptomes:
+            smkeys_to_delete.add(sm.name)
+      for smkey in smkeys_to_delete:
+        del self.synaptomes[smkey]
 
 
 

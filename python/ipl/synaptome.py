@@ -56,16 +56,23 @@ class Synaptome:
     self.checkstate = None
 
 
+  def get_named_synaptome_dependencies(self):
+    retval = set()
+    for sn in self.synaptons:
+      if sn.basis != 'CHECKED':
+        continue
+      retval.add(sn.key)
+    return retval
+
+
   def increment_checkcount(self, increment_amt, recursion_depth=0, experience_state=None):
     self.checkcount += increment_amt
     if recursion_depth == 0:
       return
     if experience_state is None:
       raise ValueError('experience_state', 'Must be specified if recursion depth is given.')
-    for sn in self.synaptons:
-      if sn.basis != 'CHECKED':
-        continue
-      sm = experience_state.synaptomes.get(sn.key)
+    for smname in self.get_named_synaptome_dependencies():
+      sm = experience_state.synaptomes.get(smname)
       if not sm:
         continue
       sm.increment_checkcount(increment_amt, recursion_depth-1, experience_state)

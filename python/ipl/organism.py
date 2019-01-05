@@ -69,7 +69,7 @@ class Organism:
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
       self.exst.decay(desperation, desperation)
-
+      self.exst.delete_orphaned_dependencies()
 
       self.check_garden_path()
       
