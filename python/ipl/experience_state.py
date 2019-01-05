@@ -163,6 +163,27 @@ class ExperienceState:
         del self.synaptomes[smkey]
 
 
+  def clear_all_flagged(self):
+    """Set the traversal flag on all synaptomes to False, to prep for recursive operations."""
+    for sm in self.synaptomes.values():
+      sm.flagged = False
+
+
+  def delete_sophistries(self):
+    """Removes synaptomes that aren't dependencies (either direct or indirect) of any action."""
+    self.clear_all_flagged()
+    for sm in self.synaptomes.values():
+      if sm.is_output():
+        sm.recursively_flag_dependencies(self)
+    smkeys_to_delete = set()
+    for smkey, sm in self.synaptomes.items():
+      if not sm.flagged:
+        smkeys_to_delete.add(smkey)
+    for smkey in smkeys_to_delete:
+      del self.synaptomes[smkey]
+    
+  # TODO: Delete all synaptomes that aren't dependent on any input.
+
 
   def choose_command(self, prob_hailmary=0, fn_hailmary=None):
     """Probabilistically chooses a command from the collection of fulfilled synaptomes. Automatically sets self.last_command.

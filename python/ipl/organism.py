@@ -64,12 +64,13 @@ class Organism:
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.1, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
       self.exst.decay(desperation, desperation)
       self.exst.delete_orphaned_dependencies()
+      self.exst.delete_sophistries()
 
       self.check_garden_path()
       

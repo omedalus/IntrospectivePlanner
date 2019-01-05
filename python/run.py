@@ -6,15 +6,20 @@ organism = ipl.Organism()
 
 turn_total = 0
 
+interval = 100
+
 for i in range(0, 10000):
   game = ipl.games.ElMazeGame(3, 3)
   organism.game = game
   organism.play()
 
+  imod = i % interval
   turn_total += game.turn
-  turn_avg = turn_total / (i + 1)
 
-  if i % 100 == 0:
+  if imod == 0:
+    turn_avg = turn_total / interval
+    turn_total = 0
+
     print('{}\t{}\t{}\t{}\t{}'.format(
       i,
       game.turn,
@@ -22,6 +27,7 @@ for i in range(0, 10000):
       len(organism.exst.synaptomes),
       len(organism.exst.get_entrenched_synaptomes())
     ))
+
 
   if 'VICTORY' in game.state():
     organism.apply_reinforcement(100 / game.turn)

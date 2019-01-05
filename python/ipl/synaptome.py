@@ -42,6 +42,12 @@ class Synaptome:
     self.inhibit = inhibit
 
 
+    # Keeps track of whether or not this synaptome has been flagged for various
+    # recursive operations that are involved in maintenance and parsimony, such
+    # as connecting to action or input atoms.
+    self.flagged = False
+
+
     if isinstance(synaptons, Synapton):
       synaptons = [synaptons]
 
@@ -54,6 +60,7 @@ class Synaptome:
   def clear(self):
     self.checkcount = 0
     self.checkstate = None
+    self.flagged = False
 
 
   def get_named_synaptome_dependencies(self):
@@ -76,6 +83,34 @@ class Synaptome:
       if not sm:
         continue
       sm.increment_checkcount(increment_amt, recursion_depth-1, experience_state)
+
+
+  def is_output(self):
+    return self.command is not None
+    # Eventually this will include the setting of registers.
+
+
+  def is_input(self):
+    for sn in self.synaptons:
+      if sn.basis != 'CHECKED':
+        # Basically anything other than another synaptome counts as an input of some kind.
+        return True
+    return False
+
+
+  def recursively_flag_dependencies(self, experience_state):
+    """Recursively flags all synaptomes that this one is dependent on. 
+    All synaptomes must have their flags cleared before this method is called.
+    """
+    if self.flagged:
+      return
+    self.flagged = True
+    smnames = self.get_named_synaptome_dependencies()
+    for smname in smnames:
+      sm = experience_state.synaptomes.get(smname)
+      if not sm:
+        continue
+      sm.recursively_flag_dependencies(experience_state)
 
 
 
