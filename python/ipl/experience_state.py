@@ -74,6 +74,9 @@ class ExperienceState:
     @param inverse: If True, returns only *de*entrenched synaptomes that *don't* make the cutoff.
     @return: Set of all synaptomes above the cutoff.
     """
+    if not len(self.synaptomes):
+      return set()
+
     if entrenchment_cutoff_fraction > 1 or entrenchment_cutoff_fraction < 0:
       raise ValueError('entrenchment_cutoff_fraction', 'Fraction must be between 0 and 1.')
     max_entch = max([sm.entrenchment for sm in self.synaptomes.values()])
@@ -83,7 +86,7 @@ class ExperienceState:
     if not inverse:
       entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment > entch_cutoff]
     else:
-      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment <= entch_cutoff]
+      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment < entch_cutoff]
 
     return set(entched_sms)
 
@@ -111,6 +114,9 @@ class ExperienceState:
     @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
     @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
     """
+    if not len(self.synaptomes):
+      return
+
     for sm in self.synaptomes.values():
       sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
 
@@ -119,11 +125,12 @@ class ExperienceState:
     # while, but either way, they need to be cleaned up.
     # We need to store them off because we can't change dictionary during iteration.
     smkeys_to_delete = set()
-    for sm in self.get_entrenched_synaptomes(entrenchment_decay_prob, True):
+    for sm in self.get_entrenched_synaptomes(.1, True):
       if random.random() < 1:
         smkeys_to_delete.add(sm.name)
     for smkey in smkeys_to_delete:
       del self.synaptomes[smkey]
+
     if not len(self.synaptomes):
       raise AssertionError('Should not be able to delete last synaptome! Deleted {}'.format(smkeys_to_delete))
 

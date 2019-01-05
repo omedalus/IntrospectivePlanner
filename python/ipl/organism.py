@@ -24,7 +24,7 @@ class Organism:
     synaptomes = set()
     synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    self.seed_synaptomes(synaptomes, 10)
+    #self.seed_synaptomes(synaptomes, 10)
     self.fell_off_garden_path = set()
 
 
