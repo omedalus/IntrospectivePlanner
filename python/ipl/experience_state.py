@@ -29,9 +29,11 @@ class ExperienceState:
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
     retval += '\tSynaptomes:\n'
-    for sm in [sm for sm in self.synaptomes.values() if sm in self.get_entrenched_synaptomes()]:
-      retval += '\t\t{}\n'.format(sm)
-    for sm in [sm for sm in self.synaptomes.values() if sm not in self.get_entrenched_synaptomes()]:
+
+    sms = list([sm for sm in self.synaptomes.values()])
+    sms.sort(key = lambda sm: -sm.entrenchment)
+
+    for sm in sms:
       retval += '\t\t{}\n'.format(sm)
     return retval
 
@@ -66,7 +68,7 @@ class ExperienceState:
           sm.checkstate = is_fulfilled
 
 
-  def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=.5, inverse=False):
+  def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
     """Returns all synaptomes whose entrenchment level is nonzero and above the one specified.
     @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptomes, this is a synaptome's min required entrenchment.
     @param inverse: If True, returns only *de*entrenched synaptomes that *don't* make the cutoff.
@@ -82,7 +84,7 @@ class ExperienceState:
       entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment > entch_cutoff]
     else:
       entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment <= entch_cutoff]
-      
+
     return set(entched_sms)
 
 
@@ -118,10 +120,12 @@ class ExperienceState:
     # We need to store them off because we can't change dictionary during iteration.
     smkeys_to_delete = set()
     for sm in self.get_entrenched_synaptomes(entrenchment_decay_prob, True):
-      if random.random() < entrenchment_decay_prob:
+      if random.random() < 1:
         smkeys_to_delete.add(sm.name)
     for smkey in smkeys_to_delete:
       del self.synaptomes[smkey]
+    if not len(self.synaptomes):
+      raise AssertionError('Should not be able to delete last synaptome! Deleted {}'.format(smkeys_to_delete))
 
 
 

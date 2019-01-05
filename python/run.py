@@ -6,7 +6,7 @@ organism = ipl.Organism()
 
 turn_total = 0
 
-for i in range(0, 10000):
+for i in range(0, 1000):
   game = ipl.games.ElMazeGame(3, 3)
   organism.game = game
   organism.play()

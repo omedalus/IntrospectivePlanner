@@ -71,7 +71,7 @@ class Synaptome:
     synstr = ' && '.join([str(sn) for sn in self.synaptons])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
-    retval += ' (x{})'.format(self.entrenchment)
+    retval += ' (x{0:.2f})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
     return retval
