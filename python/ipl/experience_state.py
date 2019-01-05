@@ -143,11 +143,9 @@ class ExperienceState:
 
 
 
-  def delete_orphaned_dependencies(self, survival_prob, num_rounds=1):
+  def delete_orphaned_dependencies(self, num_rounds=1):
     """Remove synaptomes that are dependent on synaptomes that no longer exist.
     NOTE: This could be part of a sleep cycle.
-    @param survival_prob: The chances in a given round that a synaptome identified as an orphan will
-    be permitted to survive.
     @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 
     are removed in one round may leave other synaptomes orphaned and primed for removal in subsequent
     rounds.
@@ -162,8 +160,6 @@ class ExperienceState:
           if depname not in self.synaptomes:
             smkeys_to_delete.add(sm.name)
       for smkey in smkeys_to_delete:
-        if random.random() < survival_prob:
-          continue
         del self.synaptomes[smkey]
 
 
@@ -173,9 +169,8 @@ class ExperienceState:
       sm.flagged = False
 
 
-  def delete_sophistries(self, survival_prob):
+  def delete_sophistries(self):
     """Removes synaptomes that aren't dependencies (either direct or indirect) of any action.
-    @param survival_prob: The chances that a synaptome identified as a sophistry will be permitted to survive.
     """
     self.clear_all_flagged()
     for sm in self.synaptomes.values():
@@ -186,8 +181,6 @@ class ExperienceState:
       if not sm.flagged:
         smkeys_to_delete.add(smkey)
     for smkey in smkeys_to_delete:
-      if random.random() < survival_prob:
-        continue
       del self.synaptomes[smkey]
     
   # TODO: Delete all synaptomes that aren't dependent on any input.
@@ -199,15 +192,25 @@ class ExperienceState:
     @param fn_hailmary: A function that randomly generates a command when a hailmary is rolled.
     @return: Command string, or None.
     """
-    # NOTE: Maybe the hailmary prob rises as time goes on and no reward is found? Maybe that's what frustration is all about?
-    # NOTE: We can turn this into a GA eventually, possibly, if we have to.
     winner_cmd = None
     is_hailmary = random.random() < prob_hailmary
 
     if not is_hailmary:
       candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
       if len(candidate_sms):
-        winner_sm = random.sample(candidate_sms, 1)[0]
+        # Choose randomly, weighted by the entrenchment of the candidates.
+        total_entch = sum([sm.entrenchment for sm in candidate_sms])
+        roulette = random.random() * total_entch
+        winner_sm = None
+        for sm in candidate_sms:
+          roulette -= sm.entrenchment
+          if roulette <= 0:
+            winner_sm = sm
+            break
+        if not winner_sm:
+          raise AssertionError('Your roulette algorithm is broken.')
+
+        winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
         winner_cmd = winner_sm.command
 
     if not winner_cmd and fn_hailmary:

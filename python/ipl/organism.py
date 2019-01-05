@@ -46,10 +46,11 @@ class Organism:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
 
-    # Sleep-cycle maintenance phase.
+    # Sleep-cycle maintenance phase?
     self.exst.clear()
-    self.exst.delete_orphaned_dependencies(0)
-    self.exst.delete_sophistries(0)
+    self.exst.delete_sophistries()
+    self.exst.delete_orphaned_dependencies()
+
 
     desperation = 0
     while True:
