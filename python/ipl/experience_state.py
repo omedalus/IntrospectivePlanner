@@ -38,6 +38,11 @@ class ExperienceState:
     return retval
 
 
+  def clear(self):
+    for sm in self.synaptomes.values():
+      sm.clear()
+
+
   def check_synaptomes(self, game_state, num_checks_per_round, num_rounds):
     """Sets the checked flag on randomly selected synaptomes. Only checks entrenched synaptomes.
     @param game_state: A set of atoms that are true in the world.
@@ -63,6 +68,7 @@ class ExperienceState:
       sm_to_test = entched_sms[:num_checks_per_round]
 
       for sm in sm_to_test:
+        sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
           sm.checkstate = is_fulfilled
@@ -125,7 +131,7 @@ class ExperienceState:
     # while, but either way, they need to be cleaned up.
     # We need to store them off because we can't change dictionary during iteration.
     smkeys_to_delete = set()
-    for sm in self.get_entrenched_synaptomes(.1, True):
+    for sm in self.get_entrenched_synaptomes(.25, True):
       if random.random() < 1:
         smkeys_to_delete.add(sm.name)
     for smkey in smkeys_to_delete:

@@ -45,7 +45,7 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
-    self.exst.decay(1, 0)
+    self.exst.clear()
 
     desperation = 0
     while True:
@@ -79,9 +79,10 @@ class Organism:
     checked_synaptomes = self.exst.get_checked_synaptomes()
     if not len(checked_synaptomes):
       return
+    sum_chkct = sum([sm.checkcount for sm in checked_synaptomes])
     mag_dist = magnitude / len(checked_synaptomes)
     for sm in checked_synaptomes:
-      sm.entrenchment += mag_dist
+      sm.entrenchment += mag_dist * sm.checkcount / sum_chkct
 
 
       
