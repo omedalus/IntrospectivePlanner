@@ -9,7 +9,7 @@ turn_total = 0
 
 interval = 100
 
-for i in range(0, 50000):
+for i in range(0, 5000):
   game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
   organism.game = game
   organism.play()

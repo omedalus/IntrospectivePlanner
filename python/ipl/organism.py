@@ -21,14 +21,15 @@ class Organism:
     self.exst = ExperienceState()
 
     synaptomes = set()
-    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD'), 'GO'))
+    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
+    synaptomes.add(Synaptome('GO_GO', Synapton('CHECKED', 'CAN_GO', True), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    #self.seed_synaptomes(synaptomes, 10)
+    self.seed_synaptomes(synaptomes, 10)
     self.fell_off_garden_path = set()
 
 
   def check_garden_path(self):
-    for gp in ['CAN_GO', 'SHOULD_TURN_LEFT']:
+    for gp in ['CAN_GO', 'GO_GO', 'SHOULD_TURN_LEFT']:
       if gp not in self.exst.synaptomes and gp not in self.fell_off_garden_path:
         print('{} got deleted!'.format(gp))
         self.fell_off_garden_path.add(gp)
@@ -74,7 +75,7 @@ class Organism:
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(0, 0.5, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
