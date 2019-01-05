@@ -143,9 +143,11 @@ class ExperienceState:
 
 
 
-  def delete_orphaned_dependencies(self, num_rounds=1):
+  def delete_orphaned_dependencies(self, survival_prob, num_rounds=1):
     """Remove synaptomes that are dependent on synaptomes that no longer exist.
     NOTE: This could be part of a sleep cycle.
+    @param survival_prob: The chances in a given round that a synaptome identified as an orphan will
+    be permitted to survive.
     @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 
     are removed in one round may leave other synaptomes orphaned and primed for removal in subsequent
     rounds.
@@ -160,6 +162,8 @@ class ExperienceState:
           if depname not in self.synaptomes:
             smkeys_to_delete.add(sm.name)
       for smkey in smkeys_to_delete:
+        if random.random() < survival_prob:
+          continue
         del self.synaptomes[smkey]
 
 
@@ -169,8 +173,10 @@ class ExperienceState:
       sm.flagged = False
 
 
-  def delete_sophistries(self):
-    """Removes synaptomes that aren't dependencies (either direct or indirect) of any action."""
+  def delete_sophistries(self, survival_prob):
+    """Removes synaptomes that aren't dependencies (either direct or indirect) of any action.
+    @param survival_prob: The chances that a synaptome identified as a sophistry will be permitted to survive.
+    """
     self.clear_all_flagged()
     for sm in self.synaptomes.values():
       if sm.is_output():
@@ -180,6 +186,8 @@ class ExperienceState:
       if not sm.flagged:
         smkeys_to_delete.add(smkey)
     for smkey in smkeys_to_delete:
+      if random.random() < survival_prob:
+        continue
       del self.synaptomes[smkey]
     
   # TODO: Delete all synaptomes that aren't dependent on any input.

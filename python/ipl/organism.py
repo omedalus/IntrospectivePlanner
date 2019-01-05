@@ -45,7 +45,11 @@ class Organism:
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
+
+    # Sleep-cycle maintenance phase.
     self.exst.clear()
+    self.exst.delete_orphaned_dependencies(0)
+    self.exst.delete_sophistries(0)
 
     desperation = 0
     while True:
@@ -64,13 +68,11 @@ class Organism:
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, 0.1, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
       self.exst.decay(desperation, desperation)
-      self.exst.delete_orphaned_dependencies()
-      self.exst.delete_sophistries()
 
       self.check_garden_path()
       
@@ -88,24 +90,26 @@ class Organism:
 
       
   @staticmethod
-  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, prob_add_action, exst, gs):
+  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, exst, gs):
     generated_sms = set()
 
-    all_synaptomes = list(exst.synaptomes.values())
-    active_gamestate_atoms = list(gs)
+    # Synaptomes are eligible for being selected as a dependency if they
+    # don't have a corresponding command.
+    eligible_synaptomes = list(exst.synaptomes.values())
+    eligible_synaptomes = [sm for sm in eligible_synaptomes if not sm.command]
+
+    # Gamestate atoms are eligible if they are currently active.
+    eligible_gamestate_atoms = list(gs)
+
+    if not len(eligible_synaptomes) and not len(eligible_gamestate_atoms):
+      # Cannot generate a synaptome with no eligible sources!
+      return
+
     while num_to_generate > 0:
       num_to_generate -= 1
       if num_to_generate < 0:
         if random.random() >= num_to_generate + 1:
           break
-
-      deentrenched_sms = exst.get_entrenched_synaptomes(inverse=True)
-      if len(deentrenched_sms):
-        sm = random.choice(deentrenched_sms)
-        # We'll increment your entrenchment at the end of this function.
-        # Y'all have ONE more chance to prove yourselves useful.
-        generated_sms.add(sm)
-        continue
 
       synaptons = set()
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
@@ -115,15 +119,15 @@ class Organism:
         # synapton addition decay rate.
         basis = random.choice(list(Synapton.BASES))
         if basis == 'GAME':
-          if not len(active_gamestate_atoms):
+          if not len(eligible_gamestate_atoms):
             continue
-          keyname = random.choice(active_gamestate_atoms)
+          keyname = random.choice(eligible_gamestate_atoms)
           synapton = Synapton(basis, keyname)
           synaptons.add(synapton)
         elif basis == 'CHECKED':
-          if not len(all_synaptomes):
+          if not len(eligible_synaptomes):
             continue
-          sm = random.choice(all_synaptomes)
+          sm = random.choice(eligible_synaptomes)
           synapton = Synapton(basis, sm.name, sm.checkstate)
           synaptons.add(synapton)
         elif basis == 'LAST_ACTION':
@@ -141,8 +145,10 @@ class Organism:
         if droll > prob_add_synapton:
           break
 
+      # If the synaptome only has one synapton, then it's eligible for bearing an action.
+      # The probability for bearing an action is the same as that of having another synapton.
       cmd = None
-      if random.random() <= prob_add_action:
+      if len(synaptons) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
       sm = Synaptome(randname, synaptons, cmd)
