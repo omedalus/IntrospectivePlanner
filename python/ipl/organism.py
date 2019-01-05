@@ -16,7 +16,6 @@ class Organism:
   Give it a Game, and watch it play!
   """
 
-
   def __init__(self, game=None):
     self.game = game
     self.exst = ExperienceState()
@@ -41,10 +40,12 @@ class Organism:
       self.exst.synaptomes[s.name] = s
 
 
-  def play(self):
+  def play(self, verbosity=0):
     if not self.game:
       raise ValueError("Can't play if no game is defined. Set game property.")
 
+    if verbosity >= 1:
+      print('Playing {}'.format(self.game.title))
 
     # Sleep-cycle maintenance phase?
     self.exst.clear()
@@ -58,6 +59,9 @@ class Organism:
       desperation += 0.01 * (.1 - desperation)
 
       gs = self.game.state()
+      if verbosity >= 1:
+        print('Game state (turn {}): {}'.format(self.game.turn, gs))
+
       if 'VICTORY' in gs or 'DEAD' in gs:
         break
 
@@ -66,6 +70,8 @@ class Organism:
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
+      if verbosity >= 1:
+        print('Command: {}'.format(cmd))
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.

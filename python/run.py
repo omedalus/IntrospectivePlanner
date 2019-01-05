@@ -9,7 +9,7 @@ turn_total = 0
 
 interval = 100
 
-for i in range(0, 10000):
+for i in range(0, 50):
   game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
   organism.game = game
   organism.play()
@@ -36,5 +36,9 @@ for i in range(0, 10000):
 
 print('Organism experience state: \n' + str(organism.exst))
 
-# TODO: Add one last demonstration run, with step-by-step annotation,
+# Add one last demonstration run, with step-by-step annotation,
 # to see wtf the organism is doing.
+print('\n\nFINAL SAMPLE RUN')
+game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
+organism.game = game
+organism.play(1)

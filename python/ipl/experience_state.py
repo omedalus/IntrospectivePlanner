@@ -49,6 +49,7 @@ class ExperienceState:
     @param num_checks_per_round: How many synaptomes to check in each round.
     @param num_rounds: Maximum number of rounds to check.
     """
+    # TODO: Just set to one check per round. Then number of synaptomes to check = number of rounds.
     entched_sms = list(self.get_entrenched_synaptomes())
     if not len(entched_sms):
       return
@@ -68,6 +69,14 @@ class ExperienceState:
       sm_to_test = entched_sms[:num_checks_per_round]
 
       for sm in sm_to_test:
+        # First make sure that nobody is inhibiting this guy. If someone is,
+        # then we cannot set its checkstate.
+        checked_sms = self.get_checked_synaptomes()
+        is_any_inhibiting_sm = any([osm for osm in checked_sms if osm.inhibit == sm.name])
+        if is_any_inhibiting_sm:
+          # Someone is inhibiting us.
+          continue
+
         sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
@@ -232,11 +241,14 @@ class ExperienceState:
         # otherwise we have dozens of synaptomes all clamouring for the opportunity
         # to announce the same action.
         # Find the most active guy who was advocating this action, and give him
-        # all the credit.
+        # all the credit. 
         sms_with_winner_cmd = [sm for sm in candidate_sms if sm.command == winner_cmd]
         max_chkct_with_winner_cmd = max([sm.checkcount for sm in sms_with_winner_cmd])
         winner_sm = [sm for sm in candidate_sms if sm.checkcount == max_chkct_with_winner_cmd][0]
         winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
+        for sm in candidate_sms:
+          if sm != winner_sm:
+            sm.checkstate = None
 
 
     if not winner_cmd and fn_hailmary:
