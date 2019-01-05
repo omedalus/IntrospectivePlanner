@@ -72,6 +72,11 @@ class ExperienceState:
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
           sm.checkstate = is_fulfilled
+        
+        if sm.inhibit is not None:
+          sminh = self.synaptomes.get(sm.inhibit)
+          if sminh:
+            sminh.checkstate = None
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
@@ -159,8 +164,18 @@ class ExperienceState:
         for depname in depnames:
           if depname not in self.synaptomes:
             smkeys_to_delete.add(sm.name)
+
       for smkey in smkeys_to_delete:
         del self.synaptomes[smkey]
+
+      # Clean up orphaned inhibitors.
+      # I guess this inhibitor won the battle.
+      for sm in self.synaptomes.values():
+        if not sm.inhibit:
+          continue
+        if sm.inhibit not in self.synaptomes:
+          sm.inhibit = None
+
 
 
   def clear_all_flagged(self):
@@ -216,11 +231,11 @@ class ExperienceState:
         # the reward. We do this so as to encourage parsimony in the synaptome regime;
         # otherwise we have dozens of synaptomes all clamouring for the opportunity
         # to announce the same action.
-        # Find the most entrenched guy who was advocating this action, and give him
+        # Find the most active guy who was advocating this action, and give him
         # all the credit.
         sms_with_winner_cmd = [sm for sm in candidate_sms if sm.command == winner_cmd]
-        max_entch_with_winner_cmd = max([sm.entrenchment for sm in sms_with_winner_cmd])
-        winner_sm = [sm for sm in candidate_sms if sm.entrenchment == max_entch_with_winner_cmd][0]
+        max_chkct_with_winner_cmd = max([sm.checkcount for sm in sms_with_winner_cmd])
+        winner_sm = [sm for sm in candidate_sms if sm.checkcount == max_chkct_with_winner_cmd][0]
         winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
 
 

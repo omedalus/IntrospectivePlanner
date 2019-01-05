@@ -36,9 +36,9 @@ class Synaptome:
     # that gains candidacy if this synaptome is fulfilled.
     self.command = command
 
+    # The name of another synaptome to inhibit.
     # This synaptome may optionally inhibit another synaptome. If so, it removes
     # the inhibited synaptome's check from the Checked collection.
-    # NOTE: This isn't a thing yet.
     self.inhibit = inhibit
 
 
@@ -143,6 +143,8 @@ class Synaptome:
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (x{:.2f}+{:.2f})'.format(self.entrenchment, self.checkcount)
+    if self.inhibit:
+      retval += ' !' + self.inhibit
     if self.command:
       retval += ' => "{}"'.format(self.command)
     return retval

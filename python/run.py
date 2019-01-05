@@ -10,7 +10,7 @@ turn_total = 0
 interval = 100
 
 for i in range(0, 10000):
-  game = ipl.games.ElMazeGame(int(4*random.random()) + 2, int(4*random.random()) + 2)
+  game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
   organism.game = game
   organism.play()
 
@@ -31,7 +31,10 @@ for i in range(0, 10000):
 
 
   if 'VICTORY' in game.state():
-    organism.apply_reinforcement(100 / game.turn)
+    organism.apply_reinforcement(1000 / game.turn)
 
 
 print('Organism experience state: \n' + str(organism.exst))
+
+# TODO: Add one last demonstration run, with step-by-step annotation,
+# to see wtf the organism is doing.

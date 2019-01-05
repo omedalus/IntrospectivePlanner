@@ -152,7 +152,16 @@ class Organism:
       if len(synaptons) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
-      sm = Synaptome(randname, synaptons, cmd)
+      # Possibly select a synaptome to inhibit.
+      # Any synaptome can be a target of inhibition.
+      # This will have the same probability as adding a synapton.
+      inhibit_name = None
+      if random.random() < prob_add_synapton:
+        inhibit_sm_names = list(exst.synaptomes.keys())
+        if len(inhibit_sm_names):
+          inhibit_name = random.choice(inhibit_sm_names)
+
+      sm = Synaptome(randname, synaptons, cmd, inhibit_name)
       exst.synaptomes[sm.name] = sm
       generated_sms.add(sm)
       
