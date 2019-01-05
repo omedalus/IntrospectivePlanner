@@ -210,8 +210,19 @@ class ExperienceState:
         if not winner_sm:
           raise AssertionError('Your roulette algorithm is broken.')
 
-        winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
         winner_cmd = winner_sm.command
+
+        # Not so fast. Now that we've chosen our winner command, let's consolidate
+        # the reward. We do this so as to encourage parsimony in the synaptome regime;
+        # otherwise we have dozens of synaptomes all clamouring for the opportunity
+        # to announce the same action.
+        # Find the most entrenched guy who was advocating this action, and give him
+        # all the credit.
+        sms_with_winner_cmd = [sm for sm in candidate_sms if sm.command == winner_cmd]
+        max_entch_with_winner_cmd = max([sm.entrenchment for sm in sms_with_winner_cmd])
+        winner_sm = [sm for sm in candidate_sms if sm.entrenchment == max_entch_with_winner_cmd][0]
+        winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
+
 
     if not winner_cmd and fn_hailmary:
       winner_cmd = fn_hailmary()
