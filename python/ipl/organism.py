@@ -59,10 +59,9 @@ class Organism:
       desperation += 0.01 * (.1 - desperation)
 
       gs = self.game.state()
-      if verbosity >= 1:
-        print('Game state (turn {}): {}'.format(self.game.turn, gs))
-
       if 'VICTORY' in gs or 'DEAD' in gs:
+        if verbosity >= 1:
+          print('Game state (turn {}): {}'.format(self.game.turn, gs))
         break
 
       self.exst.check_synaptomes(gs, 4, 5)
@@ -71,7 +70,7 @@ class Organism:
       # to the amount of desperation being experienced by the organism.
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       if verbosity >= 1:
-        print('Command: {}'.format(cmd))
+        print('Game state (turn {}): {} => Command: {}'.format(self.game.turn, gs, cmd))
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.
