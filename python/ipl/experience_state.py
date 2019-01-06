@@ -77,7 +77,7 @@ class ExperienceState:
           # Someone is inhibiting us.
           continue
 
-        sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
+        sm.increment_checkcount(1, recursion_depth=0, experience_state=self)
         is_fulfilled = sm.is_fulfilled(self, game_state)
         if is_fulfilled != sm.checkstate:
           sm.checkstate = is_fulfilled
@@ -146,8 +146,8 @@ class ExperienceState:
     # while, but either way, they need to be cleaned up.
     # We need to store them off because we can't change dictionary during iteration.
     smkeys_to_delete = set()
-    for sm in self.get_entrenched_synaptomes(.25, True):
-      if random.random() < 1:
+    for sm in self.get_entrenched_synaptomes(0, True):
+      if True or random.random() < entrenchment_decay_prob:
         smkeys_to_delete.add(sm.name)
     for smkey in smkeys_to_delete:
       del self.synaptomes[smkey]
@@ -245,7 +245,7 @@ class ExperienceState:
         sms_with_winner_cmd = [sm for sm in candidate_sms if sm.command == winner_cmd]
         max_chkct_with_winner_cmd = max([sm.checkcount for sm in sms_with_winner_cmd])
         winner_sm = [sm for sm in candidate_sms if sm.checkcount == max_chkct_with_winner_cmd][0]
-        winner_sm.increment_checkcount(1, recursion_depth=1, experience_state=self)
+        winner_sm.increment_checkcount(1, recursion_depth=0, experience_state=self)
         for sm in candidate_sms:
           if sm != winner_sm:
             sm.checkstate = None

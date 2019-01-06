@@ -51,7 +51,6 @@ class Organism:
     # Sleep-cycle maintenance phase?
     self.exst.clear()
     self.exst.delete_sophistries()
-    self.exst.delete_orphaned_dependencies()
 
 
     desperation = 0
@@ -65,7 +64,7 @@ class Organism:
           print('Game state (turn {}): {}'.format(self.game.turn, gs))
         break
 
-      self.exst.check_synaptomes(gs, 4, 5)
+      self.exst.check_synaptomes(gs, 1, 100)
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
@@ -75,11 +74,12 @@ class Organism:
       self.game.command(cmd, self.exst)
 
       # The odds of generating new synaptomes rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(0, 0.5, self.exst, gs)
+      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
 
 
       # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
       self.exst.decay(desperation, desperation)
+      self.exst.delete_orphaned_dependencies()
 
       self.check_garden_path()
       
@@ -172,13 +172,13 @@ class Organism:
       generated_sms.add(sm)
       
     for sm in generated_sms:
-      # Freshly generated (or reactivated) synaptomes get to start with a low
-      # but respectable level of entrenchment. Better not squander it.
+      # Freshly generated (or reactivated) synaptomes get to start with 
+      # the lowest viable level of entrenchment. Better not squander it.
       entch_sms = exst.get_entrenched_synaptomes()
       if not len(entch_sms):
         sm.entrenchment = 1
       else:
-        sm.entrenchment = statistics.mean([sm.entrenchment for sm in entch_sms]) / 2
+        sm.entrenchment = min([sm.entrenchment for sm in entch_sms]) + 1
 
     return generated_sms
       
