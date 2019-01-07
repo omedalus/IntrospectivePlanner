@@ -3,26 +3,35 @@ import ipl
 import sys
 import random
 
+import argparse
+parser = argparse.ArgumentParser(description='Run an AI through a game over and over again until it figures out how to win consistently.')
+parser.add_argument('ngames', help='How many times to run the game.', type=int)
+parser.add_argument(
+    '-r', '--report', 
+    help='Reporting interval. How many game runs occur between each line of reporting output.', 
+    type=int)
+args = parser.parse_args()
+
 organism = ipl.Organism()
 
 turn_total = 0
 
-interval = 100
+rint = args.report
 
-for i in range(0, 50):
+for i in range(0, args.ngames):
   game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
   organism.game = game
   organism.play()
 
-  imod = i % interval
+  imod = (i+1) % rint
   turn_total += game.turn
 
   if imod == 0:
-    turn_avg = turn_total / interval
+    turn_avg = turn_total / rint
     turn_total = 0
 
     print('{}\t{}\t{}\t{}\t{}'.format(
-      i,
+      i+1,
       game.turn,
       turn_avg,
       len(organism.exst.synaptomes),

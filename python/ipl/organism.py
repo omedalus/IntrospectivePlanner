@@ -56,7 +56,7 @@ class Organism:
     desperation = 0
     while True:
       # Desperation slowly climbs the longer the game goes on.
-      desperation += 0.01 * (.1 - desperation)
+      #desperation += 0.01 * (.1 - desperation)
 
       gs = self.game.state()
       if 'VICTORY' in gs or 'DEAD' in gs:
