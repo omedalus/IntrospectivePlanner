@@ -1,6 +1,7 @@
 
 from .synapton import Synapton
 
+
 import random
 
 class Synaptome:
@@ -18,14 +19,6 @@ class Synaptome:
     # what its state was at the time at which it was checked.
     self.checkstate = None
 
-    # The number of times this synaptome has been checked. 
-    # Incremented every time it's checked, regardless of whether it's found
-    # to be positive or negative. This reflects its participation in the
-    # regime, not its activity level per se.
-    # Decays over time.
-    # Affects how rewards and punishments are doled out.
-    self.checkcount = 0
-
     # A counter that gets boosted whenever the synaptome exists while positive
     # reinforcement occurs, and decremented when pain occurs or the synaptome
     # is selected for culling. Synaptomes can only actually be culled when
@@ -35,12 +28,6 @@ class Synaptome:
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
     self.command = command
-
-    # The name of another synaptome to inhibit.
-    # This synaptome may optionally inhibit another synaptome. If so, it removes
-    # the inhibited synaptome's check from the Checked collection.
-    self.inhibit = inhibit
-
 
     # Keeps track of whether or not this synaptome has been flagged for various
     # recursive operations that are involved in maintenance and parsimony, such
@@ -58,9 +45,47 @@ class Synaptome:
   
 
   def clear(self):
-    self.checkcount = 0
     self.checkstate = None
     self.flagged = False
+
+
+  def add_random_synaptons(self, experience_state, chaining_probability=0):
+    """Adds a random synapton based on the current experience state.
+    @param experience_state: Current experience state from which to draw synaptome dependencies.
+    @chaining_probability: Chance of adding multiple dependencies.
+    @return Self, for chaining.
+    """
+    sn = None
+    while not sn:
+      # Loops until it chooses an implemented basis.
+      try:
+        basis = random.choice(list(Synapton.BASES))
+        if basis == 'CHECKED':
+          all_sms = experience_state.get_linkable_synaptomes()
+          all_sms.discard(self)
+          if not len(all_sms):
+            return self
+
+          depsm = random.choice(all_sms)
+          if depsm.is_action():
+            # Synaptomes that dictate an action cannot be used as a dependency.
+            # The adding of synaptomes ends here.
+            break
+
+          key = depsm.name
+          value = depsm.checkstate
+          sn = Synapton(basis, key, value)
+      except NotImplementedError:
+        sn = None
+        continue
+
+    already_has_sn = any([already_sn == sn for already_sn in self.synaptons])
+    if not already_has_sn:
+      self.synaptons.add(sn)
+
+    if random.random() < chaining_probability:
+      self.add_random_synaptons(experience_state, chaining_probability)
+
 
 
   def get_named_synaptome_dependencies(self):
@@ -71,18 +96,6 @@ class Synaptome:
       retval.add(sn.key)
     return retval
 
-
-  def increment_checkcount(self, increment_amt, recursion_depth=0, experience_state=None):
-    self.checkcount += increment_amt
-    if recursion_depth == 0:
-      return
-    if experience_state is None:
-      raise ValueError('experience_state', 'Must be specified if recursion depth is given.')
-    for smname in self.get_named_synaptome_dependencies():
-      sm = experience_state.synaptomes.get(smname)
-      if not sm:
-        continue
-      sm.increment_checkcount(increment_amt, recursion_depth-1, experience_state)
 
 
   def is_output(self):
@@ -122,14 +135,13 @@ class Synaptome:
     self.synaptons.add(synapton)
 
 
-  def is_fulfilled(self, experience_state, game_state):
-    return all(sn.is_fulfilled(experience_state, game_state) for sn in self.synaptons)
+  def is_fulfilled(self, experience_state):
+    return all(sn.is_fulfilled(experience_state) for sn in self.synaptons)
       
 
   def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
     if random.random() < checkstate_decay_prob:
       self.checkstate = None
-      self.checkcount -= 1
 
     if random.random() < entrenchment_decay_prob:
       self.entrenchment -= entrenchment_decay_amount
@@ -142,9 +154,7 @@ class Synaptome:
     synstr = ' && '.join([str(sn) for sn in self.synaptons])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
-    retval += ' (x{:.2f}+{:.2f})'.format(self.entrenchment, self.checkcount)
-    if self.inhibit:
-      retval += ' !' + self.inhibit
+    retval += ' (x{:.2f})'.format(self.entrenchment)
     if self.command:
       retval += ' => "{}"'.format(self.command)
     return retval

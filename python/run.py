@@ -16,7 +16,7 @@ organism = ipl.Organism()
 
 turn_total = 0
 
-rint = args.report
+rint = args.report or args.ngames
 
 for i in range(0, args.ngames):
   game = ipl.games.ElMazeGame(int(10*random.random()) + 2, int(10*random.random()) + 2)
@@ -30,9 +30,8 @@ for i in range(0, args.ngames):
     turn_avg = turn_total / rint
     turn_total = 0
 
-    print('{}\t{}\t{}\t{}\t{}'.format(
+    print('{}\t{}\t{}\t{}'.format(
       i+1,
-      game.turn,
       turn_avg,
       len(organism.exst.synaptomes),
       len(organism.exst.get_entrenched_synaptomes())

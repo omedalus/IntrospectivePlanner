@@ -19,6 +19,10 @@ class ExperienceState:
     # The most recent command that the organism sent to the game.
     self.last_command = None
 
+    # Collection of named atoms that are currently being experienced 
+    # by the organism. 
+    self.inputs = set()
+
     # A map of named synaptomes. Synaptomes get checked against
     # an existing experience state, so checking them is a free action.
     # NOTE: Maybe the organism can choose to check a named synaptome,
@@ -43,13 +47,10 @@ class ExperienceState:
       sm.clear()
 
 
-  def check_synaptomes(self, game_state, num_checks_per_round, num_rounds):
+  def check_synaptomes(self, num_rounds):
     """Sets the checked flag on randomly selected synaptomes. Only checks entrenched synaptomes.
-    @param game_state: A set of atoms that are true in the world.
-    @param num_checks_per_round: How many synaptomes to check in each round.
-    @param num_rounds: Maximum number of rounds to check.
+    @param num_rounds: Number of times to pick and check a random synaptome.
     """
-    # TODO: Just set to one check per round. Then number of synaptomes to check = number of rounds.
     entched_sms = list(self.get_entrenched_synaptomes())
     if not len(entched_sms):
       return
@@ -57,35 +58,13 @@ class ExperienceState:
     num_rounds = int(num_rounds)
     while num_rounds > 0:
       num_rounds -= 1
-      # NOTE: We used to check a dirty flag here, and shortcut
-      # the rounds if nothing was changed this round. Turns out
-      # that's not a great thing to do, because we didn't necessarily
-      # sample all synaptomes in this round (we in fact probably didn't),
-      # so we should perform more rounds because subsequent rounds
-      # will pick up synaptomes with changes that we didn't catch
-      # in this round.
 
-      random.shuffle(entched_sms)
-      sm_to_test = entched_sms[:num_checks_per_round]
+      sm = random.choice(entched_sms)
 
-      for sm in sm_to_test:
-        # First make sure that nobody is inhibiting this guy. If someone is,
-        # then we cannot set its checkstate.
-        checked_sms = self.get_checked_synaptomes()
-        is_any_inhibiting_sm = any([osm for osm in checked_sms if osm.inhibit == sm.name])
-        if is_any_inhibiting_sm:
-          # Someone is inhibiting us.
-          continue
-
-        sm.increment_checkcount(1, recursion_depth=0, experience_state=self)
-        is_fulfilled = sm.is_fulfilled(self, game_state)
-        if is_fulfilled != sm.checkstate:
-          sm.checkstate = is_fulfilled
-        
-        if sm.inhibit is not None:
-          sminh = self.synaptomes.get(sm.inhibit)
-          if sminh:
-            sminh.checkstate = None
+      is_fulfilled = sm.is_fulfilled(self)
+      if is_fulfilled != sm.checkstate:
+        sm.checkstate = is_fulfilled
+      
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
@@ -126,6 +105,14 @@ class ExperienceState:
     checked_synaptomes = list(checked_synaptomes)
     return checked_synaptomes
 
+  def get_linkable_synaptomes(self):
+    """Returns all synaptomes that are eligible for being used as the dependency for another synaptome.
+    @return: Set of all linkable synaptomes.
+    """
+    all_sms = set(self.synaptomes.values())
+    return all_sms
+
+
   
 
   def decay(self, checkstate_decay_prob, entrenchment_decay_prob):
@@ -159,11 +146,14 @@ class ExperienceState:
 
   def delete_orphaned_dependencies(self, num_rounds=1):
     """Remove synaptomes that are dependent on synaptomes that no longer exist.
+    TODO: This method is all wrong. A synaptome with orphaned dependencies shouldn't
+    be deleted. Its missing dependencies should be rerolled.
     NOTE: This could be part of a sleep cycle.
     @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 
     are removed in one round may leave other synaptomes orphaned and primed for removal in subsequent
     rounds.
     """
+    return
     while num_rounds > 0:
       num_rounds -= 1
 
@@ -176,14 +166,6 @@ class ExperienceState:
 
       for smkey in smkeys_to_delete:
         del self.synaptomes[smkey]
-
-      # Clean up orphaned inhibitors.
-      # I guess this inhibitor won the battle.
-      for sm in self.synaptomes.values():
-        if not sm.inhibit:
-          continue
-        if sm.inhibit not in self.synaptomes:
-          sm.inhibit = None
 
 
 
@@ -235,21 +217,6 @@ class ExperienceState:
           raise AssertionError('Your roulette algorithm is broken.')
 
         winner_cmd = winner_sm.command
-
-        # Not so fast. Now that we've chosen our winner command, let's consolidate
-        # the reward. We do this so as to encourage parsimony in the synaptome regime;
-        # otherwise we have dozens of synaptomes all clamouring for the opportunity
-        # to announce the same action.
-        # Find the most active guy who was advocating this action, and give him
-        # all the credit. 
-        sms_with_winner_cmd = [sm for sm in candidate_sms if sm.command == winner_cmd]
-        max_chkct_with_winner_cmd = max([sm.checkcount for sm in sms_with_winner_cmd])
-        winner_sm = [sm for sm in candidate_sms if sm.checkcount == max_chkct_with_winner_cmd][0]
-        winner_sm.increment_checkcount(1, recursion_depth=0, experience_state=self)
-        for sm in candidate_sms:
-          if sm != winner_sm:
-            sm.checkstate = None
-
 
     if not winner_cmd and fn_hailmary:
       winner_cmd = fn_hailmary()

@@ -21,7 +21,7 @@ class Organism:
     self.exst = ExperienceState()
 
     synaptomes = set()
-    synaptomes.add(Synaptome('CAN_GO', Synapton('GAME', 'FORWARD')))
+    synaptomes.add(Synaptome('CAN_GO', Synapton('INPUT', 'FORWARD')))
     synaptomes.add(Synaptome('GO_GO', Synapton('CHECKED', 'CAN_GO', True), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
     self.seed_synaptomes(synaptomes, 10)
@@ -64,14 +64,15 @@ class Organism:
           print('Game state (turn {}): {}'.format(self.game.turn, gs))
         break
 
-      self.exst.check_synaptomes(gs, 1, 100)
+      self.game.set_experience(self.exst)
+      self.exst.check_synaptomes(100)
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       if verbosity >= 1:
         print('Game state (turn {}): {} => Command: {}'.format(self.game.turn, gs, cmd))
-      self.game.command(cmd, self.exst)
+      self.game.command(cmd)
 
       # The odds of generating new synaptomes rise as desperation rises.
       Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
@@ -86,13 +87,11 @@ class Organism:
 
 
   def apply_reinforcement(self, magnitude):
-    checked_synaptomes = self.exst.get_checked_synaptomes()
-    if not len(checked_synaptomes):
-      return
-    sum_chkct = sum([sm.checkcount for sm in checked_synaptomes])
-    mag_dist = magnitude / len(checked_synaptomes)
-    for sm in checked_synaptomes:
-      sm.entrenchment += mag_dist * sm.checkcount / sum_chkct
+    # All synaptomes that are part of this regime get a share of the rewards.
+    all_sms = self.exst.get_linkable_synaptomes()
+    mag_dist = magnitude / len(all_sms)
+    for sm in all_sms:
+      sm.entrenchment += mag_dist
 
 
       

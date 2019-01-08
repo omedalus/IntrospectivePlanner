@@ -7,7 +7,7 @@ class Synapton:
   A criterion that describes a condition of the experience state
   that must be met in order for a Synaptome to activate.
   """
-  BASES = set(['GAME', 'CHECKED', 'LAST_ACTION', 'REGISTERS'])
+  BASES = set(['INPUT', 'CHECKED', 'REGISTER', 'LAST_ACTION'])
 
   def __init__(self, basis, key=None, value=None):
     # If basis is GAME or CHECKED, then the key must be specified; 
@@ -22,7 +22,15 @@ class Synapton:
     if basis not in Synapton.BASES:
       raise ValueError('basis', 'Unknown basis: ' + str(basis))
 
-    if basis == 'CHECKED' or basis == 'GAME':
+    if basis == 'INPUT':
+      if key is None:
+        raise ValueError('key', 'Key must be specified for INPUT basis.') 
+      if value is None:
+        value = True
+      if value is not True:
+        raise ValueError('value', 'Value is assumed to be True for INPUT basis.')
+      value = True
+    elif basis == 'CHECKED':
       if key is None:
         raise ValueError('key', 'Key must be specified for CHECKED basis.') 
       if value is None:
@@ -34,16 +42,16 @@ class Synapton:
         else:
           value = key
           key = None
-    elif basis == 'REGISTERS':
-      raise NotImplementedError('REGISTERS basis not yet supported')
+    elif basis == 'REGISTER':
+      raise NotImplementedError('REGISTER basis not yet supported')
 
     self.basis = basis
     self.key = key
     self.value = value
 
-  def is_fulfilled(self, experience_state, game_state):
-    if self.basis == 'GAME':
-      return self.key in game_state
+  def is_fulfilled(self, experience_state):
+    if self.basis == 'INPUT':
+      return self.key in experience_state.inputs
     elif self.basis == 'CHECKED':
       s = experience_state.synaptomes.get(self.key)
       if not s or s.checkstate is None:
@@ -51,6 +59,8 @@ class Synapton:
       return s.checkstate == self.value
     elif self.basis == 'LAST_ACTION':
       return experience_state.last_command == self.value
+    elif self.basis == 'REGISTER':
+      raise AssertionError('REGISTER basis not yet supported')
 
   def __repr__(self):
     retval = self.basis + ':'
@@ -60,6 +70,8 @@ class Synapton:
       retval += self.key
     elif self.basis == 'LAST_ACTION':
       retval += self.value
+    elif self.basis == 'REGISTER':
+      raise AssertionError('REGISTER basis not yet supported')
     return retval
 
   def __eq__(self, other):

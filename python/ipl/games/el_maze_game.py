@@ -7,6 +7,12 @@ from ..synaptome import Synaptome
 import random
 
 CARDINALS = ['NORTH', 'EAST', 'SOUTH', 'WEST']
+CARDINALS_ASCII = {
+  'NORTH': '^',
+  'EAST': '>',
+  'SOUTH': 'v',
+  'WEST': '<'
+}
 DIRECTION_TURN_MAGNITUDE = {
   'RIGHT': 1,
   'LEFT': -1,
@@ -49,6 +55,7 @@ class ElMazeGame:
   def __init__(self, num_steps_before_bend, num_steps_after_bend):
     self.title = 'El Maze Game {}x{}'.format(num_steps_before_bend, num_steps_after_bend)
     self.turn = 0
+    self.par = 3 + num_steps_after_bend + 1 + num_steps_after_bend 
 
     self.__is_alive = True 
     self.__position = 0
@@ -56,12 +63,6 @@ class ElMazeGame:
     self.__victory_position = num_steps_before_bend + num_steps_after_bend
     self.__bend_position = num_steps_before_bend
 
-
-  def __str__(self):
-    gs = self.state()
-    retval = '#{} {} @{}:'.format(self.turn, self.__orientation, self.__position)
-    retval += str(gs)
-    return retval
 
 
   def generate_random_command(self):
@@ -90,23 +91,19 @@ class ElMazeGame:
     return relative_exits
 
 
+  def set_experience(self, experience_state):
+    gs = self.state()
+    experience_state.inputs = set(gs)
+
+
 
   # Performs command cmd, which is given as a string.
-  # Every command induces some kind of change of state.
-  # This can mean either a change in the game state,
-  # or a change in the experience state.
-  def command(self, cmd, experience_state=None):
+  def command(self, cmd):
     self.turn += 1
 
     gs = self.state()
     if 'DEAD' in gs or 'VICTORY' in gs:
       return False
-
-    #if cmd.startswith('CHECK'):
-    #  cmdparts = cmd.split()
-    #  cmdkey = cmdparts[1]
-    #  experience_state.checked[cmdkey] = 'FORWARD' in gs
-    #  return True
 
     if cmd.startswith('TURN'):
       cmdparts = cmd.split()
@@ -124,4 +121,15 @@ class ElMazeGame:
       return False
 
     return False
+
+
+  def __repr__(self):
+    retval = '{} turn {}/{}: {} {}'.format(
+      self.title,
+      self.turn,
+      self.par,
+      self.__position,
+      CARDINALS_ASCII[self.__orientation]
+    )
+    return retval
 
