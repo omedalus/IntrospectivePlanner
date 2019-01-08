@@ -64,7 +64,7 @@ class Synapton:
 
   def __repr__(self):
     retval = self.basis + ':'
-    if self.basis == 'CHECKED' or self.basis == 'GAME':
+    if self.basis == 'CHECKED' or self.basis == 'INPUT':
       if self.value == False:
         retval += '!'
       retval += self.key

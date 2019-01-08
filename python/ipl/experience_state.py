@@ -48,7 +48,7 @@ class ExperienceState:
 
 
   def check_synaptomes(self, num_rounds):
-    """Sets the checked flag on randomly selected synaptomes. Only checks entrenched synaptomes.
+    """Sets the checked flag on randomly selected synaptomes, iff they are fulfilled.
     @param num_rounds: Number of times to pick and check a random synaptome.
     """
     entched_sms = list(self.get_entrenched_synaptomes())
@@ -64,7 +64,13 @@ class ExperienceState:
       is_fulfilled = sm.is_fulfilled(self)
       if is_fulfilled != sm.checkstate:
         sm.checkstate = is_fulfilled
+
+      if is_fulfilled and not sm.did_fire:
+        sm.did_fire = True
       
+  def receive_reinforcement(self, magnitude):
+    for sm in self.synaptomes.values():
+      sm.receive_reinforcement(magnitude)
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
@@ -104,6 +110,7 @@ class ExperienceState:
       checked_synaptomes = [sm for sm in checked_synaptomes if sm.command is not None]
     checked_synaptomes = list(checked_synaptomes)
     return checked_synaptomes
+
 
   def get_linkable_synaptomes(self):
     """Returns all synaptomes that are eligible for being used as the dependency for another synaptome.

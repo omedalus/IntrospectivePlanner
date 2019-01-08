@@ -24,6 +24,10 @@ class Organism:
     synaptomes.add(Synaptome('CAN_GO', Synapton('INPUT', 'FORWARD')))
     synaptomes.add(Synaptome('GO_GO', Synapton('CHECKED', 'CAN_GO', True), 'GO'))
     synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
+    synaptomes.add(Synaptome('DUMMY', [
+      Synapton('CHECKED', 'CAN_GO', False),
+      Synapton('CHECKED', 'CAN_GO', True)
+    ], 'TURN LEFT'))
     self.seed_synaptomes(synaptomes, 10)
     self.fell_off_garden_path = set()
 
@@ -71,7 +75,7 @@ class Organism:
       # to the amount of desperation being experienced by the organism.
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)
       if verbosity >= 1:
-        print('Game state (turn {}): {} => Command: {}'.format(self.game.turn, gs, cmd))
+        print('{}: => Command: {}'.format(self.game, cmd))
       self.game.command(cmd)
 
       # The odds of generating new synaptomes rise as desperation rises.
@@ -84,14 +88,10 @@ class Organism:
 
       self.check_garden_path()
       
+      
 
-
-  def apply_reinforcement(self, magnitude):
-    # All synaptomes that are part of this regime get a share of the rewards.
-    all_sms = self.exst.get_linkable_synaptomes()
-    mag_dist = magnitude / len(all_sms)
-    for sm in all_sms:
-      sm.entrenchment += mag_dist
+  def receive_reinforcement(self, magnitude):
+    self.exst.receive_reinforcement(magnitude)
 
 
       
@@ -157,16 +157,7 @@ class Organism:
       if len(synaptons) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
-      # Possibly select a synaptome to inhibit.
-      # Any synaptome can be a target of inhibition.
-      # This will have the same probability as adding a synapton.
-      inhibit_name = None
-      if random.random() < prob_add_synapton:
-        inhibit_sm_names = list(exst.synaptomes.keys())
-        if len(inhibit_sm_names):
-          inhibit_name = random.choice(inhibit_sm_names)
-
-      sm = Synaptome(randname, synaptons, cmd, inhibit_name)
+      sm = Synaptome(randname, synaptons, cmd)
       exst.synaptomes[sm.name] = sm
       generated_sms.add(sm)
       

@@ -55,7 +55,7 @@ class ElMazeGame:
   def __init__(self, num_steps_before_bend, num_steps_after_bend):
     self.title = 'El Maze Game {}x{}'.format(num_steps_before_bend, num_steps_after_bend)
     self.turn = 0
-    self.par = 3 + num_steps_after_bend + 1 + num_steps_after_bend 
+    self.par = 3 + num_steps_before_bend + 1 + num_steps_after_bend 
 
     self.__is_alive = True 
     self.__position = 0

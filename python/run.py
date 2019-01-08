@@ -38,8 +38,9 @@ for i in range(0, args.ngames):
     ))
 
 
+
   if 'VICTORY' in game.state():
-    organism.apply_reinforcement(1000 / game.turn)
+    organism.receive_reinforcement(1000 * game.par / game.turn)
 
 
 print('Organism experience state: \n' + str(organism.exst))

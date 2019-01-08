@@ -1,6 +1,7 @@
 
 from .synapton import Synapton
 
+from .utils.running_stats import RunningStats
 
 import random
 
@@ -8,7 +9,7 @@ class Synaptome:
   """
   A collection of synaptons.
   """
-  def __init__(self, name, synaptons, command=None, inhibit=None):
+  def __init__(self, name, synaptons, command=None):
     # The synaptome's name, for finding in the experience state index.
     self.name = name
 
@@ -19,11 +20,13 @@ class Synaptome:
     # what its state was at the time at which it was checked.
     self.checkstate = None
 
-    # A counter that gets boosted whenever the synaptome exists while positive
-    # reinforcement occurs, and decremented when pain occurs or the synaptome
-    # is selected for culling. Synaptomes can only actually be culled when
-    # their entrenchment reaches 0.
-    self.entrenchment = 0
+    # How much reward this synaptome will expect to receive if it fired today.
+    # Represented as a RunningStats object.
+    self.expectation = RunningStats()
+
+    # True if this synaptome was checked today, and that checking was positive.
+    self.did_fire = False
+
 
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
@@ -47,6 +50,7 @@ class Synaptome:
   def clear(self):
     self.checkstate = None
     self.flagged = False
+    self.did_fire = False
 
 
   def add_random_synaptons(self, experience_state, chaining_probability=0):
@@ -142,20 +146,30 @@ class Synaptome:
   def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
     if random.random() < checkstate_decay_prob:
       self.checkstate = None
-
-    if random.random() < entrenchment_decay_prob:
-      self.entrenchment -= entrenchment_decay_amount
-      if self.entrenchment < 0:
-        self.entrenchment = 0
+      # TODO: Is this method still useful?
     
+
+  def receive_reinforcement(self, magnitude):
+    if not self.did_fire:
+      return
+    if self.expectation.n >= 100:
+      # At some point it's fired enough times to permanently lock in,
+      # and further reinforcement will change nothing.
+      # This deserves tweaking.
+      # TODO: Make this a settable parameter passed in from the organism.
+      return
+
+    self.expectation.push(magnitude)
+
 
 
   def __repr__(self):
     synstr = ' && '.join([str(sn) for sn in self.synaptons])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
-    retval += ' (x{:.2f})'.format(self.entrenchment)
+    retval += ' (+{})'.format(self.expectation)
     if self.command:
       retval += ' => "{}"'.format(self.command)
     return retval
+
 
