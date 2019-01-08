@@ -2,7 +2,7 @@
 from .experience_state import ExperienceState
 from .reflex_action_statement import ReflexActionStatement
 
-from .synapton import Synapton
+from .synapticle import Synapticle
 from .synaptome import Synaptome
 
 from .action import Action
@@ -21,12 +21,12 @@ class Organism:
     self.exst = ExperienceState()
 
     synaptomes = set()
-    synaptomes.add(Synaptome('CAN_GO', Synapton('INPUT', 'FORWARD')))
-    synaptomes.add(Synaptome('GO_GO', Synapton('CHECKED', 'CAN_GO', True), 'GO'))
-    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapton('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
+    synaptomes.add(Synaptome('CAN_GO', Synapticle('INPUT', 'FORWARD')))
+    synaptomes.add(Synaptome('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
+    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
     synaptomes.add(Synaptome('DUMMY', [
-      Synapton('CHECKED', 'CAN_GO', False),
-      Synapton('CHECKED', 'CAN_GO', True)
+      Synapticle('CHECKED', 'CAN_GO', False),
+      Synapticle('CHECKED', 'CAN_GO', True)
     ], 'TURN LEFT'))
     self.seed_synaptomes(synaptomes, 10)
     self.fell_off_garden_path = set()
@@ -122,27 +122,27 @@ class Organism:
 
       while True: 
         # Make a new synaptome, possibly with multiple synaptons, per the 
-        # synapton addition decay rate.
-        basis = random.choice(list(Synapton.BASES))
+        # synapticle addition decay rate.
+        basis = random.choice(list(Synapticle.BASES))
         if basis == 'GAME':
           if not len(eligible_gamestate_atoms):
             continue
           keyname = random.choice(eligible_gamestate_atoms)
-          synapton = Synapton(basis, keyname)
-          synaptons.add(synapton)
+          synapticle = Synapticle(basis, keyname)
+          synaptons.add(synapticle)
         elif basis == 'CHECKED':
           if not len(eligible_synaptomes):
             continue
           sm = random.choice(eligible_synaptomes)
-          synapton = Synapton(basis, sm.name, sm.checkstate)
-          synaptons.add(synapton)
+          synapticle = Synapticle(basis, sm.name, sm.checkstate)
+          synaptons.add(synapticle)
         elif basis == 'LAST_ACTION':
           # The logic for this is kinda wonky. Save it for later.
           continue
           if not exst.last_command:
             continue
-          synapton = Synapton(basis, exst.last_command)
-          synaptons.add(synapton)          
+          synapticle = Synapticle(basis, exst.last_command)
+          synaptons.add(synapticle)          
         else:
           # Not supported yet, roll again.
           continue
@@ -151,8 +151,8 @@ class Organism:
         if droll > prob_add_synapton:
           break
 
-      # If the synaptome only has one synapton, then it's eligible for bearing an action.
-      # The probability for bearing an action is the same as that of having another synapton.
+      # If the synaptome only has one synapticle, then it's eligible for bearing an action.
+      # The probability for bearing an action is the same as that of having another synapticle.
       cmd = None
       if len(synaptons) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command

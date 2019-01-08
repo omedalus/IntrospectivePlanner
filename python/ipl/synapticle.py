@@ -2,7 +2,7 @@
 
 
 
-class Synapton:
+class Synapticle:
   """
   A criterion that describes a condition of the experience state
   that must be met in order for a Synaptome to activate.
@@ -19,7 +19,7 @@ class Synapton:
     if basis is None:
       raise ValueError('basis', 'Basis must be specified.')
 
-    if basis not in Synapton.BASES:
+    if basis not in Synapticle.BASES:
       raise ValueError('basis', 'Unknown basis: ' + str(basis))
 
     if basis == 'INPUT':

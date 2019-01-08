@@ -1,7 +1,7 @@
 
 from ..action import Action
 
-from ..synapton import Synapton
+from ..synapticle import Synapticle
 from ..synaptome import Synaptome
 
 import random

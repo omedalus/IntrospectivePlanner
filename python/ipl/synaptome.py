@@ -1,5 +1,5 @@
 
-from .synapton import Synapton
+from .synapticle import Synapticle
 
 from .utils.running_stats import RunningStats
 
@@ -41,12 +41,12 @@ class Synaptome:
     self.flagged = False
 
 
-    if isinstance(synaptons, Synapton):
+    if isinstance(synaptons, Synapticle):
       synaptons = [synaptons]
 
     for s in synaptons:
-      if not isinstance(s, Synapton):
-        raise ValueError('synaptons', 'Must be a collection of Synapton objects.')
+      if not isinstance(s, Synapticle):
+        raise ValueError('synaptons', 'Must be a collection of Synapticle objects.')
       self.add_synapton(s)
   
 
@@ -58,7 +58,7 @@ class Synaptome:
 
 
   def add_random_synaptons(self, experience_state, chaining_probability=0):
-    """Adds a random synapton based on the current experience state.
+    """Adds a random synapticle based on the current experience state.
     @param experience_state: Current experience state from which to draw synaptome dependencies.
     @chaining_probability: Chance of adding multiple dependencies.
     @return Self, for chaining.
@@ -67,7 +67,7 @@ class Synaptome:
     while not sn:
       # Loops until it chooses an implemented basis.
       try:
-        basis = random.choice(list(Synapton.BASES))
+        basis = random.choice(list(Synapticle.BASES))
         if basis == 'CHECKED':
           all_sms = experience_state.get_linkable_synaptomes()
           all_sms.discard(self)
@@ -82,7 +82,7 @@ class Synaptome:
 
           key = depsm.name
           value = depsm.checkstate
-          sn = Synapton(basis, key, value)
+          sn = Synapticle(basis, key, value)
       except NotImplementedError:
         sn = None
         continue
@@ -135,12 +135,12 @@ class Synaptome:
 
 
 
-  def add_synapton(self, synapton):
+  def add_synapton(self, synapticle):
     # Only add unique synaptons.
     for s in self.synaptons:
-      if synapton == s:
+      if synapticle == s:
         return
-    self.synaptons.add(synapton)
+    self.synaptons.add(synapticle)
 
 
   def is_fulfilled(self, experience_state):
