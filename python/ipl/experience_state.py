@@ -25,7 +25,7 @@ class ExperienceState:
 
     # A map of named synaptomes. Synaptomes get checked against
     # an existing experience state, so checking them is a free action.
-    # NOTE: Maybe the organism can choose to check a named synaptome,
+    # NOTE: Maybe the organism can choose to check a named synapton,
     # or maybe checking synaptomes is itself an action.
     self.synaptomes = {}
     
@@ -49,7 +49,7 @@ class ExperienceState:
 
   def check_synaptomes(self, num_rounds):
     """Sets the checked flag on randomly selected synaptomes, iff they are fulfilled.
-    @param num_rounds: Number of times to pick and check a random synaptome.
+    @param num_rounds: Number of times to pick and check a random synapton.
     """
     entched_sms = list(self.get_entrenched_synaptomes())
     if not len(entched_sms):
@@ -75,7 +75,7 @@ class ExperienceState:
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
     """Returns all synaptomes whose entrenchment level is nonzero and above the one specified.
-    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptomes, this is a synaptome's min required entrenchment.
+    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptomes, this is a synapton's min required entrenchment.
     @param inverse: If True, returns only *de*entrenched synaptomes that *don't* make the cutoff.
     @return: Set of all synaptomes above the cutoff.
     """
@@ -113,7 +113,7 @@ class ExperienceState:
 
 
   def get_linkable_synaptomes(self):
-    """Returns all synaptomes that are eligible for being used as the dependency for another synaptome.
+    """Returns all synaptomes that are eligible for being used as the dependency for another synapton.
     @return: Set of all linkable synaptomes.
     """
     all_sms = set(self.synaptomes.values())
@@ -125,9 +125,9 @@ class ExperienceState:
   def decay(self, checkstate_decay_prob, entrenchment_decay_prob):
     """Probabilistically clears checkstates and decrements entrenchments and citations.
     NOTE: This could be part of a sleep cycle.
-    @param checkstate_decay_prob: The probability for each synaptome to get its checkstate cleared.
-    @param entrenchment_decay_prob: The probability for each synaptome to get its entrenchment decremented.
-    @param citation_decay_prob: The probability for each synaptome to get its citation count decremented.
+    @param checkstate_decay_prob: The probability for each synapton to get its checkstate cleared.
+    @param entrenchment_decay_prob: The probability for each synapton to get its entrenchment decremented.
+    @param citation_decay_prob: The probability for each synapton to get its citation count decremented.
     """
     if not len(self.synaptomes):
       return
@@ -147,13 +147,13 @@ class ExperienceState:
       del self.synaptomes[smkey]
 
     if not len(self.synaptomes):
-      raise AssertionError('Should not be able to delete last synaptome! Deleted {}'.format(smkeys_to_delete))
+      raise AssertionError('Should not be able to delete last synapton! Deleted {}'.format(smkeys_to_delete))
 
 
 
   def delete_orphaned_dependencies(self, num_rounds=1):
     """Remove synaptomes that are dependent on synaptomes that no longer exist.
-    TODO: This method is all wrong. A synaptome with orphaned dependencies shouldn't
+    TODO: This method is all wrong. A synapton with orphaned dependencies shouldn't
     be deleted. Its missing dependencies should be rerolled.
     NOTE: This could be part of a sleep cycle.
     @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 

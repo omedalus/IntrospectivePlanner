@@ -5,7 +5,7 @@
 class Synapticle:
   """
   A criterion that describes a condition of the experience state
-  that must be met in order for a Synaptome to activate.
+  that must be met in order for a Synapton to activate.
   """
   BASES = set(['INPUT', 'CHECKED', 'REGISTER', 'LAST_ACTION'])
 

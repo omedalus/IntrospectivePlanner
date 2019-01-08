@@ -5,37 +5,37 @@ from .utils.running_stats import RunningStats
 
 import random
 
-class Synaptome:
+class Synapton:
   """
   A collection of synaptons.
   """
   def __init__(self, name, synaptons, command=None):
-    # The synaptome's name, for finding in the experience state index.
+    # The synapton's name, for finding in the experience state index.
     self.name = name
 
-    # The synaptons that comprise this synaptome.
+    # The synaptons that comprise this synapton.
     self.synaptons = set()
 
-    # Determines whether or not this synaptome has been checked, and if so,
+    # Determines whether or not this synapton has been checked, and if so,
     # what its state was at the time at which it was checked.
     self.checkstate = None
 
-    # How much reward this synaptome will expect to receive if it fired today.
+    # How much reward this synapton will expect to receive if it fired today.
     # Represented as a RunningStats object.
     self.expectation = RunningStats()
     self.expectation.push(0)
 
-    # True if this synaptome was checked today, and that checking was positive.
+    # True if this synapton was checked today, and that checking was positive.
     self.did_fire = False
 
-    # Did the synaptome, if fired, receive its quota of reward expectation today?
+    # Did the synapton, if fired, receive its quota of reward expectation today?
     self.did_make_quota = True
 
-    # This synaptome may optionally be linked to a command. This is the command
-    # that gains candidacy if this synaptome is fulfilled.
+    # This synapton may optionally be linked to a command. This is the command
+    # that gains candidacy if this synapton is fulfilled.
     self.command = command
 
-    # Keeps track of whether or not this synaptome has been flagged for various
+    # Keeps track of whether or not this synapton has been flagged for various
     # recursive operations that are involved in maintenance and parsimony, such
     # as connecting to action or input atoms.
     self.flagged = False
@@ -59,7 +59,7 @@ class Synaptome:
 
   def add_random_synaptons(self, experience_state, chaining_probability=0):
     """Adds a random synapticle based on the current experience state.
-    @param experience_state: Current experience state from which to draw synaptome dependencies.
+    @param experience_state: Current experience state from which to draw synapton dependencies.
     @chaining_probability: Chance of adding multiple dependencies.
     @return Self, for chaining.
     """
@@ -114,7 +114,7 @@ class Synaptome:
   def is_input(self):
     for sn in self.synaptons:
       if sn.basis != 'CHECKED':
-        # Basically anything other than another synaptome counts as an input of some kind.
+        # Basically anything other than another synapton counts as an input of some kind.
         return True
     return False
 

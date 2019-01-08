@@ -7,8 +7,8 @@ class Action:
   def __init__(self, command=None, precondition=None):
     # Actions may have preconditions, which have to be 
     # fulfilled in order for the action to be eligible for being taken.
-    # The precondition is given as a string specifying a named synaptome.
-    # TODO: This is dumb. Action should be an affordance of a new synaptome.
+    # The precondition is given as a string specifying a named synapton.
+    # TODO: This is dumb. Action should be an affordance of a new synapton.
     self.precondition = precondition
 
     # The action to take.

@@ -3,7 +3,7 @@ from .experience_state import ExperienceState
 from .reflex_action_statement import ReflexActionStatement
 
 from .synapticle import Synapticle
-from .synaptome import Synaptome
+from .synapton import Synapton
 
 from .action import Action
 
@@ -21,10 +21,10 @@ class Organism:
     self.exst = ExperienceState()
 
     synaptomes = set()
-    synaptomes.add(Synaptome('CAN_GO', Synapticle('INPUT', 'FORWARD')))
-    synaptomes.add(Synaptome('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
-    synaptomes.add(Synaptome('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    synaptomes.add(Synaptome('DUMMY', [
+    synaptomes.add(Synapton('CAN_GO', Synapticle('INPUT', 'FORWARD')))
+    synaptomes.add(Synapton('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
+    synaptomes.add(Synapton('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
+    synaptomes.add(Synapton('DUMMY', [
       Synapticle('CHECKED', 'CAN_GO', False),
       Synapticle('CHECKED', 'CAN_GO', True)
     ], 'TURN LEFT'))
@@ -108,7 +108,7 @@ class Organism:
     eligible_gamestate_atoms = list(gs)
 
     if not len(eligible_synaptomes) and not len(eligible_gamestate_atoms):
-      # Cannot generate a synaptome with no eligible sources!
+      # Cannot generate a synapton with no eligible sources!
       return
 
     while num_to_generate > 0:
@@ -121,7 +121,7 @@ class Organism:
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
 
       while True: 
-        # Make a new synaptome, possibly with multiple synaptons, per the 
+        # Make a new synapton, possibly with multiple synaptons, per the 
         # synapticle addition decay rate.
         basis = random.choice(list(Synapticle.BASES))
         if basis == 'GAME':
@@ -151,13 +151,13 @@ class Organism:
         if droll > prob_add_synapton:
           break
 
-      # If the synaptome only has one synapticle, then it's eligible for bearing an action.
+      # If the synapton only has one synapticle, then it's eligible for bearing an action.
       # The probability for bearing an action is the same as that of having another synapticle.
       cmd = None
       if len(synaptons) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
-      sm = Synaptome(randname, synaptons, cmd)
+      sm = Synapton(randname, synaptons, cmd)
       exst.synaptomes[sm.name] = sm
       generated_sms.add(sm)
       
