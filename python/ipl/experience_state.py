@@ -34,17 +34,17 @@ class ExperienceState:
     retval = '\tLast command: {}\n'.format(self.last_command)
     retval += '\tSynaptomes:\n'
 
-    sms = list([sm for sm in self.synaptons.values()])
-    sms.sort(key = lambda sm: -sm.entrenchment)
+    sms = list([sn for sn in self.synaptons.values()])
+    sms.sort(key = lambda sn: -sn.entrenchment)
 
-    for sm in sms:
-      retval += '\t\t{}\n'.format(sm)
+    for sn in sms:
+      retval += '\t\t{}\n'.format(sn)
     return retval
 
 
   def clear(self):
-    for sm in self.synaptons.values():
-      sm.clear()
+    for sn in self.synaptons.values():
+      sn.clear()
 
 
   def check_synaptomes(self, num_rounds):
@@ -59,18 +59,24 @@ class ExperienceState:
     while num_rounds > 0:
       num_rounds -= 1
 
-      sm = random.choice(entched_sms)
+      sn = random.choice(entched_sms)
 
-      is_fulfilled = sm.is_fulfilled(self)
-      if is_fulfilled != sm.checkstate:
-        sm.checkstate = is_fulfilled
+      is_fulfilled = sn.is_fulfilled(self)
+      if is_fulfilled != sn.checkstate:
+        sn.checkstate = is_fulfilled
 
-      if is_fulfilled and not sm.did_fire:
-        sm.did_fire = True
-      
+      if is_fulfilled and not sn.did_fire:
+        sn.did_fire = True
+
+
   def receive_reinforcement(self, magnitude):
-    for sm in self.synaptons.values():
-      sm.receive_reinforcement(magnitude)
+    for sn in self.synaptons.values():
+      sn.receive_reinforcement(magnitude)
+
+
+  def angst(self):
+    """Computes the ratio of fired synaptomes that missed their quotas."""
+    pass
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
@@ -84,14 +90,14 @@ class ExperienceState:
 
     if entrenchment_cutoff_fraction > 1 or entrenchment_cutoff_fraction < 0:
       raise ValueError('entrenchment_cutoff_fraction', 'Fraction must be between 0 and 1.')
-    max_entch = max([sm.entrenchment for sm in self.synaptons.values()])
+    max_entch = max([sn.entrenchment for sn in self.synaptons.values()])
     entch_cutoff = entrenchment_cutoff_fraction * max_entch
 
     entched_sms = []
     if not inverse:
-      entched_sms = [sm for sm in self.synaptons.values() if sm.entrenchment > entch_cutoff]
+      entched_sms = [sn for sn in self.synaptons.values() if sn.entrenchment > entch_cutoff]
     else:
-      entched_sms = [sm for sm in self.synaptons.values() if sm.entrenchment < entch_cutoff]
+      entched_sms = [sn for sn in self.synaptons.values() if sn.entrenchment < entch_cutoff]
 
     return set(entched_sms)
 
@@ -103,11 +109,11 @@ class ExperienceState:
     @param with_command: If set, returns only synaptons that have a corresponding command.
     @return: Collection of synaptons whose checkstate is not None.
     """
-    checked_synaptomes = [sm for sm in self.get_entrenched_synaptomes() if sm.checkstate is not None]
+    checked_synaptomes = [sn for sn in self.get_entrenched_synaptomes() if sn.checkstate is not None]
     if constraint is not None:
-      checked_synaptomes = [sm for sm in checked_synaptomes if sm.checkstate == constraint]
+      checked_synaptomes = [sn for sn in checked_synaptomes if sn.checkstate == constraint]
     if with_command:
-      checked_synaptomes = [sm for sm in checked_synaptomes if sm.command is not None]
+      checked_synaptomes = [sn for sn in checked_synaptomes if sn.command is not None]
     checked_synaptomes = list(checked_synaptomes)
     return checked_synaptomes
 
@@ -132,17 +138,17 @@ class ExperienceState:
     if not len(self.synaptons):
       return
 
-    for sm in self.synaptons.values():
-      sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
+    for sn in self.synaptons.values():
+      sn.decay(checkstate_decay_prob, entrenchment_decay_prob)
 
     # In a separate step, probabilistically delete all deentrenched synaptons.
     # Maybe they were *just* deentrenched, or maybe they had been deentrenched for a
     # while, but either way, they need to be cleaned up.
     # We need to store them off because we can't change dictionary during iteration.
     smkeys_to_delete = set()
-    for sm in self.get_entrenched_synaptomes(0, True):
+    for sn in self.get_entrenched_synaptomes(0, True):
       if True or random.random() < entrenchment_decay_prob:
-        smkeys_to_delete.add(sm.name)
+        smkeys_to_delete.add(sn.name)
     for smkey in smkeys_to_delete:
       del self.synaptons[smkey]
 
@@ -165,11 +171,11 @@ class ExperienceState:
       num_rounds -= 1
 
       smkeys_to_delete = set()
-      for smkey, sm in self.synaptons.items():
-        depnames = sm.get_named_synaptome_dependencies()
+      for smkey, sn in self.synaptons.items():
+        depnames = sn.get_named_synaptome_dependencies()
         for depname in depnames:
           if depname not in self.synaptons:
-            smkeys_to_delete.add(sm.name)
+            smkeys_to_delete.add(sn.name)
 
       for smkey in smkeys_to_delete:
         del self.synaptons[smkey]
@@ -178,20 +184,20 @@ class ExperienceState:
 
   def clear_all_flagged(self):
     """Set the traversal flag on all synaptons to False, to prep for recursive operations."""
-    for sm in self.synaptons.values():
-      sm.flagged = False
+    for sn in self.synaptons.values():
+      sn.flagged = False
 
 
   def delete_sophistries(self):
     """Removes synaptons that aren't dependencies (either direct or indirect) of any action.
     """
     self.clear_all_flagged()
-    for sm in self.synaptons.values():
-      if sm.is_output():
-        sm.recursively_flag_dependencies(self)
+    for sn in self.synaptons.values():
+      if sn.is_output():
+        sn.recursively_flag_dependencies(self)
     smkeys_to_delete = set()
-    for smkey, sm in self.synaptons.items():
-      if not sm.flagged:
+    for smkey, sn in self.synaptons.items():
+      if not sn.flagged:
         smkeys_to_delete.add(smkey)
     for smkey in smkeys_to_delete:
       del self.synaptons[smkey]
@@ -212,13 +218,13 @@ class ExperienceState:
       candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
       if len(candidate_sms):
         # Choose randomly, weighted by the entrenchment of the candidates.
-        total_entch = sum([sm.entrenchment for sm in candidate_sms])
+        total_entch = sum([sn.entrenchment for sn in candidate_sms])
         roulette = random.random() * total_entch
         winner_sm = None
-        for sm in candidate_sms:
-          roulette -= sm.entrenchment
+        for sn in candidate_sms:
+          roulette -= sn.entrenchment
           if roulette <= 0:
-            winner_sm = sm
+            winner_sm = sn
             break
         if not winner_sm:
           raise AssertionError('Your roulette algorithm is broken.')

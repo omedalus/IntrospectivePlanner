@@ -29,6 +29,8 @@ class Synapton:
     self.did_fire = False
 
     # Did the synapton, if fired, receive its quota of reward expectation today?
+    # TODO: Someday maybe this will be a metric of, say, how many standard deviations
+    # the quota was missed by. For now, it doesn't matter.
     self.did_make_quota = True
 
     # This synapton may optionally be linked to a command. This is the command
@@ -63,8 +65,8 @@ class Synapton:
     @chaining_probability: Chance of adding multiple dependencies.
     @return Self, for chaining.
     """
-    sn = None
-    while not sn:
+    sicl = None
+    while not sicl:
       # Loops until it chooses an implemented basis.
       try:
         basis = random.choice(list(Synapticle.BASES))
@@ -82,14 +84,14 @@ class Synapton:
 
           key = depsm.name
           value = depsm.checkstate
-          sn = Synapticle(basis, key, value)
+          sicl = Synapticle(basis, key, value)
       except NotImplementedError:
-        sn = None
+        sicl = None
         continue
 
-    already_has_sn = any([already_sn == sn for already_sn in self.synapticles])
+    already_has_sn = any([already_sn == sicl for already_sn in self.synapticles])
     if not already_has_sn:
-      self.synapticles.add(sn)
+      self.synapticles.add(sicl)
 
     if random.random() < chaining_probability:
       self.add_random_synaptons(experience_state, chaining_probability)
@@ -98,10 +100,10 @@ class Synapton:
 
   def get_named_synaptome_dependencies(self):
     retval = set()
-    for sn in self.synapticles:
-      if sn.basis != 'CHECKED':
+    for sicl in self.synapticles:
+      if sicl.basis != 'CHECKED':
         continue
-      retval.add(sn.key)
+      retval.add(sicl.key)
     return retval
 
 
@@ -112,8 +114,8 @@ class Synapton:
 
 
   def is_input(self):
-    for sn in self.synapticles:
-      if sn.basis != 'CHECKED':
+    for sicl in self.synapticles:
+      if sicl.basis != 'CHECKED':
         # Basically anything other than another synapton counts as an input of some kind.
         return True
     return False
@@ -128,10 +130,10 @@ class Synapton:
     self.flagged = True
     smnames = self.get_named_synaptome_dependencies()
     for smname in smnames:
-      sm = experience_state.synaptons.get(smname)
-      if not sm:
+      sn = experience_state.synaptons.get(smname)
+      if not sn:
         continue
-      sm.recursively_flag_dependencies(experience_state)
+      sn.recursively_flag_dependencies(experience_state)
 
 
 
@@ -144,7 +146,7 @@ class Synapton:
 
 
   def is_fulfilled(self, experience_state):
-    return all(sn.is_fulfilled(experience_state) for sn in self.synapticles)
+    return all(sicl.is_fulfilled(experience_state) for sicl in self.synapticles)
       
 
   def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
@@ -174,7 +176,7 @@ class Synapton:
 
 
   def __repr__(self):
-    synstr = ' && '.join([str(sn) for sn in self.synapticles])
+    synstr = ' && '.join([str(sicl) for sicl in self.synapticles])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (+{})'.format(self.expectation)

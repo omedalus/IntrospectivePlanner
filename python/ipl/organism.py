@@ -102,7 +102,7 @@ class Organism:
     # Synaptomes are eligible for being selected as a dependency if they
     # don't have a corresponding command.
     eligible_synaptomes = list(exst.synaptons.values())
-    eligible_synaptomes = [sm for sm in eligible_synaptomes if not sm.command]
+    eligible_synaptomes = [sn for sn in eligible_synaptomes if not sn.command]
 
     # Gamestate atoms are eligible if they are currently active.
     eligible_gamestate_atoms = list(gs)
@@ -133,8 +133,8 @@ class Organism:
         elif basis == 'CHECKED':
           if not len(eligible_synaptomes):
             continue
-          sm = random.choice(eligible_synaptomes)
-          synapticle = Synapticle(basis, sm.name, sm.checkstate)
+          sn = random.choice(eligible_synaptomes)
+          synapticle = Synapticle(basis, sn.name, sn.checkstate)
           synapticles.add(synapticle)
         elif basis == 'LAST_ACTION':
           # The logic for this is kinda wonky. Save it for later.
@@ -157,18 +157,18 @@ class Organism:
       if len(synapticles) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
-      sm = Synapton(randname, synapticles, cmd)
-      exst.synaptons[sm.name] = sm
-      generated_sms.add(sm)
+      sn = Synapton(randname, synapticles, cmd)
+      exst.synaptons[sn.name] = sn
+      generated_sms.add(sn)
       
-    for sm in generated_sms:
+    for sn in generated_sms:
       # Freshly generated (or reactivated) synaptons get to start with 
       # the lowest viable level of entrenchment. Better not squander it.
       entch_sms = exst.get_entrenched_synaptomes()
       if not len(entch_sms):
-        sm.entrenchment = 1
+        sn.entrenchment = 1
       else:
-        sm.entrenchment = min([sm.entrenchment for sm in entch_sms]) + 1
+        sn.entrenchment = min([sn.entrenchment for sn in entch_sms]) + 1
 
     return generated_sms
       
