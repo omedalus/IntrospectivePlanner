@@ -29,13 +29,16 @@ class ExperienceState:
     # or maybe checking synaptons is itself an action.
     self.synaptons = {}
     
+    # A count of how long this organism has been alive.
+    self.turncount = 0
+
 
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
     retval += '\tSynaptomes:\n'
 
     sms = list([sn for sn in self.synaptons.values()])
-    sms.sort(key = lambda sn: -sn.entrenchment)
+    sms.sort(key = lambda sn: -sn.expectation.mean())
 
     for sn in sms:
       retval += '\t\t{}\n'.format(sn)
@@ -47,7 +50,7 @@ class ExperienceState:
       sn.clear()
 
 
-  def check_synaptomes(self, num_rounds):
+  def check_synaptons(self, num_rounds):
     """Sets the checked flag on randomly selected synaptons, iff they are fulfilled.
     @param num_rounds: Number of times to pick and check a random synapton.
     """
@@ -74,6 +77,10 @@ class ExperienceState:
       sn.receive_reinforcement(magnitude)
 
 
+  def advance_turn(self, num_turns=1):
+    self.turncount += num_turns
+
+
   def angst(self):
     """Computes the fraction of fired synaptomes that missed their quotas.
     @return: float between 0 and 1.
@@ -84,46 +91,23 @@ class ExperienceState:
     return retval
 
 
-  def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
-    """Returns all synaptons whose entrenchment level is nonzero and above the one specified.
-    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptons, this is a synapton's min required entrenchment.
-    @param inverse: If True, returns only *de*entrenched synaptons that *don't* make the cutoff.
-    @return: Set of all synaptons above the cutoff.
-    """
-    if not len(self.synaptons):
-      return set()
 
-    if entrenchment_cutoff_fraction > 1 or entrenchment_cutoff_fraction < 0:
-      raise ValueError('entrenchment_cutoff_fraction', 'Fraction must be between 0 and 1.')
-    max_entch = max([sn.entrenchment for sn in self.synaptons.values()])
-    entch_cutoff = entrenchment_cutoff_fraction * max_entch
-
-    entched_sms = []
-    if not inverse:
-      entched_sms = [sn for sn in self.synaptons.values() if sn.entrenchment > entch_cutoff]
-    else:
-      entched_sms = [sn for sn in self.synaptons.values() if sn.entrenchment < entch_cutoff]
-
-    return set(entched_sms)
-
-
-
-  def get_checked_synaptomes(self, constraint=None, with_command=False):
+  def get_checked_synaptons(self, constraint=None, with_command=False):
     """Returns a collection of checked synaptons that meet the specified criteria.
     @param constraint: If set to True or False, returns only synaptons whose checkstate is True or False, respectively.
     @param with_command: If set, returns only synaptons that have a corresponding command.
     @return: Collection of synaptons whose checkstate is not None.
     """
-    checked_synaptomes = [sn for sn in self.get_entrenched_synaptomes() if sn.checkstate is not None]
+    checked_sns = [sn for sn in self.synaptons.values() if sn.checkstate is not None]
     if constraint is not None:
-      checked_synaptomes = [sn for sn in checked_synaptomes if sn.checkstate == constraint]
+      checked_sns = [sn for sn in checked_sns if sn.checkstate == constraint]
     if with_command:
-      checked_synaptomes = [sn for sn in checked_synaptomes if sn.command is not None]
-    checked_synaptomes = list(checked_synaptomes)
-    return checked_synaptomes
+      checked_sns = [sn for sn in checked_sns if sn.command is not None]
+    checked_sns = list(checked_sns)
+    return checked_sns
 
 
-  def get_linkable_synaptomes(self):
+  def get_linkable_synaptons(self):
     """Returns all synaptons that are eligible for being used as the dependency for another synapton.
     @return: Set of all linkable synaptons.
     """
@@ -131,34 +115,6 @@ class ExperienceState:
     return all_sms
 
 
-  
-
-  def decay(self, checkstate_decay_prob, entrenchment_decay_prob):
-    """Probabilistically clears checkstates and decrements entrenchments and citations.
-    NOTE: This could be part of a sleep cycle.
-    @param checkstate_decay_prob: The probability for each synapton to get its checkstate cleared.
-    @param entrenchment_decay_prob: The probability for each synapton to get its entrenchment decremented.
-    @param citation_decay_prob: The probability for each synapton to get its citation count decremented.
-    """
-    if not len(self.synaptons):
-      return
-
-    for sn in self.synaptons.values():
-      sn.decay(checkstate_decay_prob, entrenchment_decay_prob)
-
-    # In a separate step, probabilistically delete all deentrenched synaptons.
-    # Maybe they were *just* deentrenched, or maybe they had been deentrenched for a
-    # while, but either way, they need to be cleaned up.
-    # We need to store them off because we can't change dictionary during iteration.
-    smkeys_to_delete = set()
-    for sn in self.get_entrenched_synaptomes(0, True):
-      if True or random.random() < entrenchment_decay_prob:
-        smkeys_to_delete.add(sn.name)
-    for smkey in smkeys_to_delete:
-      del self.synaptons[smkey]
-
-    if not len(self.synaptons):
-      raise AssertionError('Should not be able to delete last synapton! Deleted {}'.format(smkeys_to_delete))
 
 
 
@@ -220,21 +176,10 @@ class ExperienceState:
     is_hailmary = random.random() < prob_hailmary
 
     if not is_hailmary:
-      candidate_sms = self.get_checked_synaptomes(constraint=True, with_command=True)
-      if len(candidate_sms):
-        # Choose randomly, weighted by the entrenchment of the candidates.
-        total_entch = sum([sn.entrenchment for sn in candidate_sms])
-        roulette = random.random() * total_entch
-        winner_sm = None
-        for sn in candidate_sms:
-          roulette -= sn.entrenchment
-          if roulette <= 0:
-            winner_sm = sn
-            break
-        if not winner_sm:
-          raise AssertionError('Your roulette algorithm is broken.')
-
-        winner_cmd = winner_sm.command
+      candidate_sns = self.get_checked_synaptons(constraint=True, with_command=True)
+      if len(candidate_sns):
+        winner_sn = random.choice(candidate_sns)
+        winner_cmd = winner_sn.command
 
     if not winner_cmd and fn_hailmary:
       winner_cmd = fn_hailmary()

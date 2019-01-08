@@ -27,8 +27,8 @@ class Organism:
     synaptons.add(Synapton('DUMMY', [
       Synapticle('CHECKED', 'CAN_GO', False),
       Synapticle('CHECKED', 'CAN_GO', True)
-    ], 'TURN LEFT'))
-    self.seed_synaptomes(synaptons, 10)
+    ], 'TURN BACK'))
+    self.seed_synaptons(synaptons)
     self.fell_off_garden_path = set()
 
 
@@ -39,9 +39,9 @@ class Organism:
         self.fell_off_garden_path.add(gp)
 
 
-  def seed_synaptomes(self, synaptons, entrenchment):
+  def seed_synaptons(self, synaptons):
     for s in synaptons:
-      s.entrenchment = entrenchment
+      s.expectation.n = 1000000
       self.exst.synaptons[s.name] = s
 
 
@@ -69,7 +69,7 @@ class Organism:
         break
 
       self.game.set_experience(self.exst)
-      self.exst.check_synaptomes(100)
+      self.exst.check_synaptons(100)
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
@@ -79,14 +79,13 @@ class Organism:
       self.game.command(cmd)
 
       # The odds of generating new synaptons rise as desperation rises.
-      Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
+      # Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
 
+      self.exst.advance_turn()
 
-      # Let checkedstates, entrenchments, etc., all decay a bit, as time is passing.
-      self.exst.decay(desperation, desperation)
       self.exst.delete_orphaned_dependencies()
-
       self.check_garden_path()
+
       
       
 
