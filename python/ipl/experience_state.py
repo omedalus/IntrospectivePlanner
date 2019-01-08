@@ -82,7 +82,8 @@ class ExperienceState:
   def start_turn(self):
     self.turncount += 1
     for sn in self.synaptons.values():
-      sn.is_tentative = False
+      #sn.is_tentative = False
+      pass
 
 
   def angst(self):
@@ -172,6 +173,12 @@ class ExperienceState:
       del self.synaptons[smkey]
     
   # TODO: Delete all synaptons that aren't dependent on any input.
+
+
+  def generate_random_synaptom(self):
+    """Create a random synapton and add it to our set."""
+    randname = 'SN_' + str(int(random.random() * 1000000000))
+
 
 
   def choose_command(self, prob_hailmary=0, fn_hailmary=None):

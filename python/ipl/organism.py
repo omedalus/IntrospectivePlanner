@@ -43,6 +43,7 @@ class Organism:
     for s in synaptons:
       s.expectation.n = 1000000
       self.exst.synaptons[s.name] = s
+      s.is_tentative = False
 
 
   def play(self, verbosity=0):
@@ -59,7 +60,7 @@ class Organism:
 
     desperation = 0
     while True:
-      self.exst.start_turn()
+      #self.exst.start_turn()
 
       # Desperation slowly climbs the longer the game goes on.
       #desperation += 0.01 * (.1 - desperation)

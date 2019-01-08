@@ -9,7 +9,7 @@ class Synapton:
   """
   A collection of synapticles.
   """
-  def __init__(self, name, synapticles, command=None):
+  def __init__(self, name, synapticles=None, command=None):
     # The synapton's name, for finding in the experience state index.
     self.name = name
 
@@ -48,6 +48,8 @@ class Synapton:
     # is done.
     self.is_tentative = True
 
+    if not synapticles:
+      synapticles = []
 
     if isinstance(synapticles, Synapticle):
       synapticles = [synapticles]
@@ -55,7 +57,7 @@ class Synapton:
     for s in synapticles:
       if not isinstance(s, Synapticle):
         raise ValueError('synapticles', 'Must be a collection of Synapticle objects.')
-      self.add_synapton(s)
+      self.add_synapticle(s)
   
 
   def clear(self):
@@ -65,7 +67,7 @@ class Synapton:
     self.did_make_quota = False
 
 
-  def add_random_synaptons(self, experience_state, chaining_probability=0):
+  def add_random_synapticles(self, experience_state, chaining_probability=0):
     """Adds a random synapticle based on the current experience state.
     @param experience_state: Current experience state from which to draw synapton dependencies.
     @chaining_probability: Chance of adding multiple dependencies.
@@ -95,16 +97,13 @@ class Synapton:
         sicl = None
         continue
 
-    already_has_sn = any([already_sn == sicl for already_sn in self.synapticles])
-    if not already_has_sn:
-      self.synapticles.add(sicl)
-
+    self.add_synapticle(sicl)
     if random.random() < chaining_probability:
-      self.add_random_synaptons(experience_state, chaining_probability)
+      self.add_random_synapticles(experience_state, chaining_probability)
 
 
 
-  def get_named_synaptome_dependencies(self):
+  def get_named_synapton_dependencies(self):
     retval = set()
     for sicl in self.synapticles:
       if sicl.basis != 'CHECKED':
@@ -134,7 +133,7 @@ class Synapton:
     if self.flagged:
       return
     self.flagged = True
-    smnames = self.get_named_synaptome_dependencies()
+    smnames = self.get_named_synapton_dependencies()
     for smname in smnames:
       sn = experience_state.synaptons.get(smname)
       if not sn:
@@ -143,7 +142,7 @@ class Synapton:
 
 
 
-  def add_synapton(self, synapticle):
+  def add_synapticle(self, synapticle):
     # Only add unique synapticles.
     for s in self.synapticles:
       if synapticle == s:
