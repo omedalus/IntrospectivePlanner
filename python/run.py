@@ -23,24 +23,24 @@ for i in range(0, args.ngames):
   organism.game = game
   organism.play()
 
+  if 'VICTORY' in game.state():
+    organism.receive_reinforcement(1000 * game.par / game.turn)
+
   imod = (i+1) % rint
   turn_total += game.turn
+
 
   if imod == 0:
     turn_avg = turn_total / rint
     turn_total = 0
 
-    print('{}\t{}\t{}\t{}'.format(
+    print('{}\t{}\t{}\t{:.2f}'.format(
       i+1,
       turn_avg,
       len(organism.exst.synaptons),
-      len(organism.exst.get_entrenched_synaptomes())
+      organism.exst.angst()
     ))
 
-
-
-  if 'VICTORY' in game.state():
-    organism.receive_reinforcement(1000 * game.par / game.turn)
 
 
 print('Organism experience state: \n' + str(organism.exst))

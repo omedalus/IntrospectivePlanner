@@ -51,15 +51,15 @@ class ExperienceState:
     """Sets the checked flag on randomly selected synaptons, iff they are fulfilled.
     @param num_rounds: Number of times to pick and check a random synapton.
     """
-    entched_sms = list(self.get_entrenched_synaptomes())
-    if not len(entched_sms):
+    sns = list(self.synaptons.values())
+    if not len(sns):
       return
 
     num_rounds = int(num_rounds)
     while num_rounds > 0:
       num_rounds -= 1
 
-      sn = random.choice(entched_sms)
+      sn = random.choice(sns)
 
       is_fulfilled = sn.is_fulfilled(self)
       if is_fulfilled != sn.checkstate:
@@ -75,8 +75,13 @@ class ExperienceState:
 
 
   def angst(self):
-    """Computes the ratio of fired synaptomes that missed their quotas."""
-    pass
+    """Computes the fraction of fired synaptomes that missed their quotas.
+    @return: float between 0 and 1.
+    """
+    sns_fired = [sn for sn in self.synaptons.values() if sn.did_fire]
+    sns_missed_quota = [sn for sn in sns_fired if not sn.did_make_quota]
+    retval = len(sns_missed_quota) / len(sns_fired)
+    return retval
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
