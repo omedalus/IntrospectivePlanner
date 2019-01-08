@@ -2,6 +2,8 @@
 import random
 import statistics
 
+from .synapton import Synapton
+
 class ExperienceState:
   """
   An object that describes the total state of the organism
@@ -38,6 +40,7 @@ class ExperienceState:
     retval += '\tSynaptomes:\n'
 
     sms = list([sn for sn in self.synaptons.values()])
+    sms.sort(key = lambda sn: -sn.expectation.n)
     sms.sort(key = lambda sn: -sn.expectation.mean())
 
     for sn in sms:
@@ -175,9 +178,12 @@ class ExperienceState:
   # TODO: Delete all synaptons that aren't dependent on any input.
 
 
-  def generate_random_synaptom(self):
+  def generate_random_synapton(self):
     """Create a random synapton and add it to our set."""
     randname = 'SN_' + str(int(random.random() * 1000000000))
+    sn = Synapton(randname)
+    sn.add_random_synapticles(self)
+    self.synaptons[sn.name] = sn
 
 
 

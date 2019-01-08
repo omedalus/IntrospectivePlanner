@@ -74,6 +74,8 @@ class Organism:
       self.game.set_experience(self.exst)
       self.exst.check_synaptons(100)
 
+      self.exst.generate_random_synapton()
+
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
       cmd = self.exst.choose_command(desperation, self.game.generate_random_command)

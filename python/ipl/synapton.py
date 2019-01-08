@@ -79,13 +79,13 @@ class Synapton:
       try:
         basis = random.choice(list(Synapticle.BASES))
         if basis == 'CHECKED':
-          all_sms = experience_state.get_linkable_synaptomes()
+          all_sms = experience_state.get_linkable_synaptons()
           all_sms.discard(self)
           if not len(all_sms):
             return self
 
-          depsm = random.choice(all_sms)
-          if depsm.is_action():
+          depsm = random.choice(list(all_sms))
+          if depsm.is_output():
             # Synaptomes that dictate an action cannot be used as a dependency.
             # The adding of synaptons ends here.
             break
@@ -152,13 +152,7 @@ class Synapton:
 
   def is_fulfilled(self, experience_state):
     return all(sicl.is_fulfilled(experience_state) for sicl in self.synapticles)
-      
-
-  def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
-    if random.random() < checkstate_decay_prob:
-      self.checkstate = None
-      # TODO: Is this method still useful?
-    
+          
 
   def receive_reinforcement(self, magnitude):
     self.did_make_quota = True
