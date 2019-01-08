@@ -7,14 +7,14 @@ import random
 
 class Synapton:
   """
-  A collection of synaptons.
+  A collection of synapticles.
   """
-  def __init__(self, name, synaptons, command=None):
+  def __init__(self, name, synapticles, command=None):
     # The synapton's name, for finding in the experience state index.
     self.name = name
 
-    # The synaptons that comprise this synapton.
-    self.synaptons = set()
+    # The synapticles that comprise this synapton.
+    self.synapticles = set()
 
     # Determines whether or not this synapton has been checked, and if so,
     # what its state was at the time at which it was checked.
@@ -41,12 +41,12 @@ class Synapton:
     self.flagged = False
 
 
-    if isinstance(synaptons, Synapticle):
-      synaptons = [synaptons]
+    if isinstance(synapticles, Synapticle):
+      synapticles = [synapticles]
 
-    for s in synaptons:
+    for s in synapticles:
       if not isinstance(s, Synapticle):
-        raise ValueError('synaptons', 'Must be a collection of Synapticle objects.')
+        raise ValueError('synapticles', 'Must be a collection of Synapticle objects.')
       self.add_synapton(s)
   
 
@@ -77,7 +77,7 @@ class Synapton:
           depsm = random.choice(all_sms)
           if depsm.is_action():
             # Synaptomes that dictate an action cannot be used as a dependency.
-            # The adding of synaptomes ends here.
+            # The adding of synaptons ends here.
             break
 
           key = depsm.name
@@ -87,9 +87,9 @@ class Synapton:
         sn = None
         continue
 
-    already_has_sn = any([already_sn == sn for already_sn in self.synaptons])
+    already_has_sn = any([already_sn == sn for already_sn in self.synapticles])
     if not already_has_sn:
-      self.synaptons.add(sn)
+      self.synapticles.add(sn)
 
     if random.random() < chaining_probability:
       self.add_random_synaptons(experience_state, chaining_probability)
@@ -98,7 +98,7 @@ class Synapton:
 
   def get_named_synaptome_dependencies(self):
     retval = set()
-    for sn in self.synaptons:
+    for sn in self.synapticles:
       if sn.basis != 'CHECKED':
         continue
       retval.add(sn.key)
@@ -112,7 +112,7 @@ class Synapton:
 
 
   def is_input(self):
-    for sn in self.synaptons:
+    for sn in self.synapticles:
       if sn.basis != 'CHECKED':
         # Basically anything other than another synapton counts as an input of some kind.
         return True
@@ -120,15 +120,15 @@ class Synapton:
 
 
   def recursively_flag_dependencies(self, experience_state):
-    """Recursively flags all synaptomes that this one is dependent on. 
-    All synaptomes must have their flags cleared before this method is called.
+    """Recursively flags all synaptons that this one is dependent on. 
+    All synaptons must have their flags cleared before this method is called.
     """
     if self.flagged:
       return
     self.flagged = True
     smnames = self.get_named_synaptome_dependencies()
     for smname in smnames:
-      sm = experience_state.synaptomes.get(smname)
+      sm = experience_state.synaptons.get(smname)
       if not sm:
         continue
       sm.recursively_flag_dependencies(experience_state)
@@ -136,15 +136,15 @@ class Synapton:
 
 
   def add_synapton(self, synapticle):
-    # Only add unique synaptons.
-    for s in self.synaptons:
+    # Only add unique synapticles.
+    for s in self.synapticles:
       if synapticle == s:
         return
-    self.synaptons.add(synapticle)
+    self.synapticles.add(synapticle)
 
 
   def is_fulfilled(self, experience_state):
-    return all(sn.is_fulfilled(experience_state) for sn in self.synaptons)
+    return all(sn.is_fulfilled(experience_state) for sn in self.synapticles)
       
 
   def decay(self, checkstate_decay_prob=0, entrenchment_decay_prob=0, entrenchment_decay_amount=1):
@@ -174,7 +174,7 @@ class Synapton:
 
 
   def __repr__(self):
-    synstr = ' && '.join([str(sn) for sn in self.synaptons])
+    synstr = ' && '.join([str(sn) for sn in self.synapticles])
     chstr = 'T' if self.checkstate == True else 'F' if self.checkstate == False else '_'
     retval = '{}({})=<{}>'.format(self.name, chstr, synstr)
     retval += ' (+{})'.format(self.expectation)

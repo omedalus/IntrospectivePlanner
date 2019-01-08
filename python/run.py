@@ -33,7 +33,7 @@ for i in range(0, args.ngames):
     print('{}\t{}\t{}\t{}'.format(
       i+1,
       turn_avg,
-      len(organism.exst.synaptomes),
+      len(organism.exst.synaptons),
       len(organism.exst.get_entrenched_synaptomes())
     ))
 

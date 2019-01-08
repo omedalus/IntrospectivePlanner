@@ -20,29 +20,29 @@ class Organism:
     self.game = game
     self.exst = ExperienceState()
 
-    synaptomes = set()
-    synaptomes.add(Synapton('CAN_GO', Synapticle('INPUT', 'FORWARD')))
-    synaptomes.add(Synapton('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
-    synaptomes.add(Synapton('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
-    synaptomes.add(Synapton('DUMMY', [
+    synaptons = set()
+    synaptons.add(Synapton('CAN_GO', Synapticle('INPUT', 'FORWARD')))
+    synaptons.add(Synapton('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
+    synaptons.add(Synapton('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
+    synaptons.add(Synapton('DUMMY', [
       Synapticle('CHECKED', 'CAN_GO', False),
       Synapticle('CHECKED', 'CAN_GO', True)
     ], 'TURN LEFT'))
-    self.seed_synaptomes(synaptomes, 10)
+    self.seed_synaptomes(synaptons, 10)
     self.fell_off_garden_path = set()
 
 
   def check_garden_path(self):
     for gp in ['CAN_GO', 'GO_GO', 'SHOULD_TURN_LEFT']:
-      if gp not in self.exst.synaptomes and gp not in self.fell_off_garden_path:
+      if gp not in self.exst.synaptons and gp not in self.fell_off_garden_path:
         print('{} got deleted!'.format(gp))
         self.fell_off_garden_path.add(gp)
 
 
-  def seed_synaptomes(self, synaptomes, entrenchment):
-    for s in synaptomes:
+  def seed_synaptomes(self, synaptons, entrenchment):
+    for s in synaptons:
       s.entrenchment = entrenchment
-      self.exst.synaptomes[s.name] = s
+      self.exst.synaptons[s.name] = s
 
 
   def play(self, verbosity=0):
@@ -78,7 +78,7 @@ class Organism:
         print('{}: => Command: {}'.format(self.game, cmd))
       self.game.command(cmd)
 
-      # The odds of generating new synaptomes rise as desperation rises.
+      # The odds of generating new synaptons rise as desperation rises.
       Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
 
 
@@ -101,7 +101,7 @@ class Organism:
 
     # Synaptomes are eligible for being selected as a dependency if they
     # don't have a corresponding command.
-    eligible_synaptomes = list(exst.synaptomes.values())
+    eligible_synaptomes = list(exst.synaptons.values())
     eligible_synaptomes = [sm for sm in eligible_synaptomes if not sm.command]
 
     # Gamestate atoms are eligible if they are currently active.
@@ -117,11 +117,11 @@ class Organism:
         if random.random() >= num_to_generate + 1:
           break
 
-      synaptons = set()
+      synapticles = set()
       randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
 
       while True: 
-        # Make a new synapton, possibly with multiple synaptons, per the 
+        # Make a new synapton, possibly with multiple synapticles, per the 
         # synapticle addition decay rate.
         basis = random.choice(list(Synapticle.BASES))
         if basis == 'GAME':
@@ -129,20 +129,20 @@ class Organism:
             continue
           keyname = random.choice(eligible_gamestate_atoms)
           synapticle = Synapticle(basis, keyname)
-          synaptons.add(synapticle)
+          synapticles.add(synapticle)
         elif basis == 'CHECKED':
           if not len(eligible_synaptomes):
             continue
           sm = random.choice(eligible_synaptomes)
           synapticle = Synapticle(basis, sm.name, sm.checkstate)
-          synaptons.add(synapticle)
+          synapticles.add(synapticle)
         elif basis == 'LAST_ACTION':
           # The logic for this is kinda wonky. Save it for later.
           continue
           if not exst.last_command:
             continue
           synapticle = Synapticle(basis, exst.last_command)
-          synaptons.add(synapticle)          
+          synapticles.add(synapticle)          
         else:
           # Not supported yet, roll again.
           continue
@@ -154,15 +154,15 @@ class Organism:
       # If the synapton only has one synapticle, then it's eligible for bearing an action.
       # The probability for bearing an action is the same as that of having another synapticle.
       cmd = None
-      if len(synaptons) == 1 and random.random() <= prob_add_synapton:
+      if len(synapticles) == 1 and random.random() <= prob_add_synapton:
         cmd = exst.last_command
 
-      sm = Synapton(randname, synaptons, cmd)
-      exst.synaptomes[sm.name] = sm
+      sm = Synapton(randname, synapticles, cmd)
+      exst.synaptons[sm.name] = sm
       generated_sms.add(sm)
       
     for sm in generated_sms:
-      # Freshly generated (or reactivated) synaptomes get to start with 
+      # Freshly generated (or reactivated) synaptons get to start with 
       # the lowest viable level of entrenchment. Better not squander it.
       entch_sms = exst.get_entrenched_synaptomes()
       if not len(entch_sms):

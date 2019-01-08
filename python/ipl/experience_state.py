@@ -23,18 +23,18 @@ class ExperienceState:
     # by the organism. 
     self.inputs = set()
 
-    # A map of named synaptomes. Synaptomes get checked against
+    # A map of named synaptons. Synaptomes get checked against
     # an existing experience state, so checking them is a free action.
     # NOTE: Maybe the organism can choose to check a named synapton,
-    # or maybe checking synaptomes is itself an action.
-    self.synaptomes = {}
+    # or maybe checking synaptons is itself an action.
+    self.synaptons = {}
     
 
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
     retval += '\tSynaptomes:\n'
 
-    sms = list([sm for sm in self.synaptomes.values()])
+    sms = list([sm for sm in self.synaptons.values()])
     sms.sort(key = lambda sm: -sm.entrenchment)
 
     for sm in sms:
@@ -43,12 +43,12 @@ class ExperienceState:
 
 
   def clear(self):
-    for sm in self.synaptomes.values():
+    for sm in self.synaptons.values():
       sm.clear()
 
 
   def check_synaptomes(self, num_rounds):
-    """Sets the checked flag on randomly selected synaptomes, iff they are fulfilled.
+    """Sets the checked flag on randomly selected synaptons, iff they are fulfilled.
     @param num_rounds: Number of times to pick and check a random synapton.
     """
     entched_sms = list(self.get_entrenched_synaptomes())
@@ -69,39 +69,39 @@ class ExperienceState:
         sm.did_fire = True
       
   def receive_reinforcement(self, magnitude):
-    for sm in self.synaptomes.values():
+    for sm in self.synaptons.values():
       sm.receive_reinforcement(magnitude)
 
 
   def get_entrenched_synaptomes(self, entrenchment_cutoff_fraction=0, inverse=False):
-    """Returns all synaptomes whose entrenchment level is nonzero and above the one specified.
-    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptomes, this is a synapton's min required entrenchment.
-    @param inverse: If True, returns only *de*entrenched synaptomes that *don't* make the cutoff.
-    @return: Set of all synaptomes above the cutoff.
+    """Returns all synaptons whose entrenchment level is nonzero and above the one specified.
+    @param entrenchment_cutoff_fraction: Multiply by the max entrenchment of all synaptons, this is a synapton's min required entrenchment.
+    @param inverse: If True, returns only *de*entrenched synaptons that *don't* make the cutoff.
+    @return: Set of all synaptons above the cutoff.
     """
-    if not len(self.synaptomes):
+    if not len(self.synaptons):
       return set()
 
     if entrenchment_cutoff_fraction > 1 or entrenchment_cutoff_fraction < 0:
       raise ValueError('entrenchment_cutoff_fraction', 'Fraction must be between 0 and 1.')
-    max_entch = max([sm.entrenchment for sm in self.synaptomes.values()])
+    max_entch = max([sm.entrenchment for sm in self.synaptons.values()])
     entch_cutoff = entrenchment_cutoff_fraction * max_entch
 
     entched_sms = []
     if not inverse:
-      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment > entch_cutoff]
+      entched_sms = [sm for sm in self.synaptons.values() if sm.entrenchment > entch_cutoff]
     else:
-      entched_sms = [sm for sm in self.synaptomes.values() if sm.entrenchment < entch_cutoff]
+      entched_sms = [sm for sm in self.synaptons.values() if sm.entrenchment < entch_cutoff]
 
     return set(entched_sms)
 
 
 
   def get_checked_synaptomes(self, constraint=None, with_command=False):
-    """Returns a collection of checked synaptomes that meet the specified criteria.
-    @param constraint: If set to True or False, returns only synaptomes whose checkstate is True or False, respectively.
-    @param with_command: If set, returns only synaptomes that have a corresponding command.
-    @return: Collection of synaptomes whose checkstate is not None.
+    """Returns a collection of checked synaptons that meet the specified criteria.
+    @param constraint: If set to True or False, returns only synaptons whose checkstate is True or False, respectively.
+    @param with_command: If set, returns only synaptons that have a corresponding command.
+    @return: Collection of synaptons whose checkstate is not None.
     """
     checked_synaptomes = [sm for sm in self.get_entrenched_synaptomes() if sm.checkstate is not None]
     if constraint is not None:
@@ -113,10 +113,10 @@ class ExperienceState:
 
 
   def get_linkable_synaptomes(self):
-    """Returns all synaptomes that are eligible for being used as the dependency for another synapton.
-    @return: Set of all linkable synaptomes.
+    """Returns all synaptons that are eligible for being used as the dependency for another synapton.
+    @return: Set of all linkable synaptons.
     """
-    all_sms = set(self.synaptomes.values())
+    all_sms = set(self.synaptons.values())
     return all_sms
 
 
@@ -129,13 +129,13 @@ class ExperienceState:
     @param entrenchment_decay_prob: The probability for each synapton to get its entrenchment decremented.
     @param citation_decay_prob: The probability for each synapton to get its citation count decremented.
     """
-    if not len(self.synaptomes):
+    if not len(self.synaptons):
       return
 
-    for sm in self.synaptomes.values():
+    for sm in self.synaptons.values():
       sm.decay(checkstate_decay_prob, entrenchment_decay_prob)
 
-    # In a separate step, probabilistically delete all deentrenched synaptomes.
+    # In a separate step, probabilistically delete all deentrenched synaptons.
     # Maybe they were *just* deentrenched, or maybe they had been deentrenched for a
     # while, but either way, they need to be cleaned up.
     # We need to store them off because we can't change dictionary during iteration.
@@ -144,20 +144,20 @@ class ExperienceState:
       if True or random.random() < entrenchment_decay_prob:
         smkeys_to_delete.add(sm.name)
     for smkey in smkeys_to_delete:
-      del self.synaptomes[smkey]
+      del self.synaptons[smkey]
 
-    if not len(self.synaptomes):
+    if not len(self.synaptons):
       raise AssertionError('Should not be able to delete last synapton! Deleted {}'.format(smkeys_to_delete))
 
 
 
   def delete_orphaned_dependencies(self, num_rounds=1):
-    """Remove synaptomes that are dependent on synaptomes that no longer exist.
+    """Remove synaptons that are dependent on synaptons that no longer exist.
     TODO: This method is all wrong. A synapton with orphaned dependencies shouldn't
     be deleted. Its missing dependencies should be rerolled.
     NOTE: This could be part of a sleep cycle.
-    @param num_rounds: How many times to check all synaptomes for dependencies. Any synaptomes that 
-    are removed in one round may leave other synaptomes orphaned and primed for removal in subsequent
+    @param num_rounds: How many times to check all synaptons for dependencies. Any synaptons that 
+    are removed in one round may leave other synaptons orphaned and primed for removal in subsequent
     rounds.
     """
     return
@@ -165,42 +165,42 @@ class ExperienceState:
       num_rounds -= 1
 
       smkeys_to_delete = set()
-      for smkey, sm in self.synaptomes.items():
+      for smkey, sm in self.synaptons.items():
         depnames = sm.get_named_synaptome_dependencies()
         for depname in depnames:
-          if depname not in self.synaptomes:
+          if depname not in self.synaptons:
             smkeys_to_delete.add(sm.name)
 
       for smkey in smkeys_to_delete:
-        del self.synaptomes[smkey]
+        del self.synaptons[smkey]
 
 
 
   def clear_all_flagged(self):
-    """Set the traversal flag on all synaptomes to False, to prep for recursive operations."""
-    for sm in self.synaptomes.values():
+    """Set the traversal flag on all synaptons to False, to prep for recursive operations."""
+    for sm in self.synaptons.values():
       sm.flagged = False
 
 
   def delete_sophistries(self):
-    """Removes synaptomes that aren't dependencies (either direct or indirect) of any action.
+    """Removes synaptons that aren't dependencies (either direct or indirect) of any action.
     """
     self.clear_all_flagged()
-    for sm in self.synaptomes.values():
+    for sm in self.synaptons.values():
       if sm.is_output():
         sm.recursively_flag_dependencies(self)
     smkeys_to_delete = set()
-    for smkey, sm in self.synaptomes.items():
+    for smkey, sm in self.synaptons.items():
       if not sm.flagged:
         smkeys_to_delete.add(smkey)
     for smkey in smkeys_to_delete:
-      del self.synaptomes[smkey]
+      del self.synaptons[smkey]
     
-  # TODO: Delete all synaptomes that aren't dependent on any input.
+  # TODO: Delete all synaptons that aren't dependent on any input.
 
 
   def choose_command(self, prob_hailmary=0, fn_hailmary=None):
-    """Probabilistically chooses a command from the collection of fulfilled synaptomes. Automatically sets self.last_command.
+    """Probabilistically chooses a command from the collection of fulfilled synaptons. Automatically sets self.last_command.
     @param prob_hailmary: The probability that we should choose no action at all, and let the game choose for us.
     @param fn_hailmary: A function that randomly generates a command when a hailmary is rolled.
     @return: Command string, or None.

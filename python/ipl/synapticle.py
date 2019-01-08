@@ -53,7 +53,7 @@ class Synapticle:
     if self.basis == 'INPUT':
       return self.key in experience_state.inputs
     elif self.basis == 'CHECKED':
-      s = experience_state.synaptomes.get(self.key)
+      s = experience_state.synaptons.get(self.key)
       if not s or s.checkstate is None:
         return False
       return s.checkstate == self.value
