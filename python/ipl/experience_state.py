@@ -55,6 +55,7 @@ class ExperienceState:
     @param num_rounds: Number of times to pick and check a random synapton.
     """
     sns = list(self.synaptons.values())
+    sns = [sn for sn in sns if not sn.is_tentative]
     if not len(sns):
       return
 
@@ -77,8 +78,11 @@ class ExperienceState:
       sn.receive_reinforcement(magnitude)
 
 
-  def advance_turn(self, num_turns=1):
-    self.turncount += num_turns
+  
+  def start_turn(self):
+    self.turncount += 1
+    for sn in self.synaptons.values():
+      sn.is_tentative = False
 
 
   def angst(self):
@@ -87,6 +91,10 @@ class ExperienceState:
     """
     sns_fired = [sn for sn in self.synaptons.values() if sn.did_fire]
     sns_missed_quota = [sn for sn in sns_fired if not sn.did_make_quota]
+
+    if not len(sns_fired):
+      return 0
+
     retval = len(sns_missed_quota) / len(sns_fired)
     return retval
 

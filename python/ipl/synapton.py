@@ -42,6 +42,12 @@ class Synapton:
     # as connecting to action or input atoms.
     self.flagged = False
 
+    # Is this synapton checkable? When we play a game, we want to test the entire
+    # cohort of synaptons that are determining the play of that game. Therefore,
+    # synaptons created midway during play shouldn't count until after the game
+    # is done.
+    self.is_tentative = True
+
 
     if isinstance(synapticles, Synapticle):
       synapticles = [synapticles]

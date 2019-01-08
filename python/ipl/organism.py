@@ -59,6 +59,8 @@ class Organism:
 
     desperation = 0
     while True:
+      self.exst.start_turn()
+
       # Desperation slowly climbs the longer the game goes on.
       #desperation += 0.01 * (.1 - desperation)
 
@@ -80,8 +82,6 @@ class Organism:
 
       # The odds of generating new synaptons rise as desperation rises.
       # Organism.__generate_random_emergent_synaptomes(desperation, 0.5, self.exst, gs)
-
-      self.exst.advance_turn()
 
       self.exst.delete_orphaned_dependencies()
       self.check_garden_path()
