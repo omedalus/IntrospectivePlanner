@@ -23,10 +23,13 @@ class Synaptome:
     # How much reward this synaptome will expect to receive if it fired today.
     # Represented as a RunningStats object.
     self.expectation = RunningStats()
+    self.expectation.push(0)
 
     # True if this synaptome was checked today, and that checking was positive.
     self.did_fire = False
 
+    # Did the synaptome, if fired, receive its quota of reward expectation today?
+    self.did_make_quota = True
 
     # This synaptome may optionally be linked to a command. This is the command
     # that gains candidacy if this synaptome is fulfilled.
@@ -51,6 +54,7 @@ class Synaptome:
     self.checkstate = None
     self.flagged = False
     self.did_fire = False
+    self.did_make_quota = False
 
 
   def add_random_synaptons(self, experience_state, chaining_probability=0):
@@ -150,6 +154,7 @@ class Synaptome:
     
 
   def receive_reinforcement(self, magnitude):
+    self.did_make_quota = True
     if not self.did_fire:
       return
     if self.expectation.n >= 100:
@@ -158,6 +163,11 @@ class Synaptome:
       # This deserves tweaking.
       # TODO: Make this a settable parameter passed in from the organism.
       return
+
+    quota_cutoff = self.expectation.mean() - 2 * self.expectation.standard_deviation()
+    if magnitude < quota_cutoff:
+      self.did_make_quota = False
+      print('{} missed quota!'.format(self))
 
     self.expectation.push(magnitude)
 
