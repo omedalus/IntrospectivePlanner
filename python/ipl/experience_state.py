@@ -25,7 +25,11 @@ class ExperienceState:
     # by the organism. 
     self.inputs = set()
 
-    # A map of named synaptons. Synaptomes get checked against
+    # Collection of command strings that are currently available for output.
+    self.outputs = set()
+
+
+    # A map of named synaptons. Synaptons get checked against
     # an existing experience state, so checking them is a free action.
     # NOTE: Maybe the organism can choose to check a named synapton,
     # or maybe checking synaptons is itself an action.
@@ -37,6 +41,8 @@ class ExperienceState:
 
   def __repr__(self):
     retval = '\tLast command: {}\n'.format(self.last_command)
+    retval += '\tInputs: {}\n'.format(self.inputs)
+    retval += '\tOutputs: {}\n'.format(self.outputs)
     retval += '\tSynaptomes:\n'
 
     sms = list([sn for sn in self.synaptons.values()])
@@ -123,7 +129,7 @@ class ExperienceState:
     """Returns all synaptons that are eligible for being used as the dependency for another synapton.
     @return: Set of all linkable synaptons.
     """
-    all_sms = set(self.synaptons.values())
+    all_sms = set([sn for sn in self.synaptons.values() if not sn.is_tentative and not sn.command])
     return all_sms
 
 
@@ -182,7 +188,9 @@ class ExperienceState:
     """Create a random synapton and add it to our set."""
     randname = 'SN_' + str(int(random.random() * 1000000000))
     sn = Synapton(randname)
-    sn.add_random_synapticles(self)
+    sn.add_random_synapticles(self, .5)
+    if not len(sn.synapticles):
+      return
     self.synaptons[sn.name] = sn
 
 

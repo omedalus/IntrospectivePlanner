@@ -21,7 +21,7 @@ class Organism:
     self.exst = ExperienceState()
 
     synaptons = set()
-    synaptons.add(Synapton('CAN_GO', Synapticle('INPUT', 'FORWARD')))
+    synaptons.add(Synapton('CAN_GO', Synapticle('INPUT', 'FORWARD', True)))
     synaptons.add(Synapton('GO_GO', Synapticle('CHECKED', 'CAN_GO', True), 'GO'))
     synaptons.add(Synapton('SHOULD_TURN_LEFT', Synapticle('CHECKED', 'CAN_GO', False), 'TURN LEFT'))
     synaptons.add(Synapton('DUMMY', [
@@ -55,10 +55,11 @@ class Organism:
 
     # Sleep-cycle maintenance phase?
     self.exst.clear()
-    self.exst.delete_sophistries()
+    #self.exst.delete_sophistries()
 
 
     desperation = 0
+    luxury = 0.2
     while True:
       #self.exst.start_turn()
 
@@ -74,7 +75,12 @@ class Organism:
       self.game.set_experience(self.exst)
       self.exst.check_synaptons(100)
 
-      self.exst.generate_random_synapton()
+      # Luxury is a function of how much experimentation the organism can 
+      # afford to perform. It determines the likelihood of generating new
+      # synaptons. 
+      # TODO: Figure out a way to integrate luxury into the reward system.
+      if random.random() < luxury:
+        self.exst.generate_random_synapton()
 
       # The odds of just performing a Hail Mary are proportional
       # to the amount of desperation being experienced by the organism.
@@ -97,82 +103,6 @@ class Organism:
 
 
       
-  @staticmethod
-  def __generate_random_emergent_synaptomes(num_to_generate, prob_add_synapton, exst, gs):
-    generated_sms = set()
-
-    # Synaptomes are eligible for being selected as a dependency if they
-    # don't have a corresponding command.
-    eligible_synaptomes = list(exst.synaptons.values())
-    eligible_synaptomes = [sn for sn in eligible_synaptomes if not sn.command]
-
-    # Gamestate atoms are eligible if they are currently active.
-    eligible_gamestate_atoms = list(gs)
-
-    if not len(eligible_synaptomes) and not len(eligible_gamestate_atoms):
-      # Cannot generate a synapton with no eligible sources!
-      return
-
-    while num_to_generate > 0:
-      num_to_generate -= 1
-      if num_to_generate < 0:
-        if random.random() >= num_to_generate + 1:
-          break
-
-      synapticles = set()
-      randname = 'SYNAPTOME_' + str(int(random.random() * 1000000000))
-
-      while True: 
-        # Make a new synapton, possibly with multiple synapticles, per the 
-        # synapticle addition decay rate.
-        basis = random.choice(list(Synapticle.BASES))
-        if basis == 'GAME':
-          if not len(eligible_gamestate_atoms):
-            continue
-          keyname = random.choice(eligible_gamestate_atoms)
-          synapticle = Synapticle(basis, keyname)
-          synapticles.add(synapticle)
-        elif basis == 'CHECKED':
-          if not len(eligible_synaptomes):
-            continue
-          sn = random.choice(eligible_synaptomes)
-          synapticle = Synapticle(basis, sn.name, sn.checkstate)
-          synapticles.add(synapticle)
-        elif basis == 'LAST_ACTION':
-          # The logic for this is kinda wonky. Save it for later.
-          continue
-          if not exst.last_command:
-            continue
-          synapticle = Synapticle(basis, exst.last_command)
-          synapticles.add(synapticle)          
-        else:
-          # Not supported yet, roll again.
-          continue
-      
-        droll = random.random()
-        if droll > prob_add_synapton:
-          break
-
-      # If the synapton only has one synapticle, then it's eligible for bearing an action.
-      # The probability for bearing an action is the same as that of having another synapticle.
-      cmd = None
-      if len(synapticles) == 1 and random.random() <= prob_add_synapton:
-        cmd = exst.last_command
-
-      sn = Synapton(randname, synapticles, cmd)
-      exst.synaptons[sn.name] = sn
-      generated_sms.add(sn)
-      
-    for sn in generated_sms:
-      # Freshly generated (or reactivated) synaptons get to start with 
-      # the lowest viable level of entrenchment. Better not squander it.
-      entch_sms = exst.get_entrenched_synaptomes()
-      if not len(entch_sms):
-        sn.entrenchment = 1
-      else:
-        sn.entrenchment = min([sn.entrenchment for sn in entch_sms]) + 1
-
-    return generated_sms
       
 
 

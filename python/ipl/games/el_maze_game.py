@@ -1,9 +1,6 @@
 
 from ..action import Action
 
-from ..synapticle import Synapticle
-from ..synapton import Synapton
-
 import random
 
 CARDINALS = ['NORTH', 'EAST', 'SOUTH', 'WEST']
@@ -60,6 +57,8 @@ class ElMazeGame:
     self.__is_alive = True 
     self.__position = 0
     self.__orientation = random.choice(CARDINALS)
+    self.__last_cmd = None
+
     self.__victory_position = num_steps_before_bend + num_steps_after_bend
     self.__bend_position = num_steps_before_bend
 
@@ -91,15 +90,33 @@ class ElMazeGame:
     return relative_exits
 
 
+  def get_available_commands(self):
+    """Determines what commands are available to perform, given the current world state.
+    @return: set of strings.
+    """
+    retval = set([
+      'TURN LEFT',
+      'TURN RIGHT',
+      'TURN BACK'
+    ])
+    gs = self.state()
+    if 'FORWARD' in gs:
+      retval.add('GO')
+    return retval
+
+
   def set_experience(self, experience_state):
     gs = self.state()
     experience_state.inputs = set(gs)
+    experience_state.outputs = self.get_available_commands()
+    experience_state.last_command = self.__last_cmd
 
 
 
   # Performs command cmd, which is given as a string.
   def command(self, cmd):
     self.turn += 1
+    self.__last_cmd = cmd
 
     gs = self.state()
     if 'DEAD' in gs or 'VICTORY' in gs:
@@ -124,10 +141,11 @@ class ElMazeGame:
 
 
   def __repr__(self):
-    retval = '{} turn {}/{}: {} {}'.format(
+    retval = '{} turn {}/{} ({}): @{}{}'.format(
       self.title,
       self.turn,
       self.par,
+      self.__last_cmd or '',
       self.__position,
       CARDINALS_ASCII[self.__orientation]
     )
