@@ -59,9 +59,9 @@ class Organism:
 
 
     desperation = 0
-    luxury = 0.2
+    luxury = 2
     while True:
-      #self.exst.start_turn()
+      self.exst.start_turn()
 
       # Desperation slowly climbs the longer the game goes on.
       #desperation += 0.01 * (.1 - desperation)
@@ -79,7 +79,8 @@ class Organism:
       # afford to perform. It determines the likelihood of generating new
       # synaptons. 
       # TODO: Figure out a way to integrate luxury into the reward system.
-      if random.random() < luxury:
+      if luxury > 0 and random.random() < luxury:
+        luxury -= 1
         self.exst.generate_random_synapton()
 
       # The odds of just performing a Hail Mary are proportional

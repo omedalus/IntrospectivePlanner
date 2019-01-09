@@ -90,9 +90,6 @@ class ExperienceState:
   
   def start_turn(self):
     self.turncount += 1
-    for sn in self.synaptons.values():
-      #sn.is_tentative = False
-      pass
 
 
   def angst(self):
@@ -192,6 +189,17 @@ class ExperienceState:
     if not len(sn.synapticles):
       return
     self.synaptons[sn.name] = sn
+    if random.random() < .5:
+      sn.command = random.choice(list(self.outputs))
+
+    # Because the new synapton is drawn randomly from the current state,
+    # it is technically fulfilled, and therefore should count as having
+    # fired today. This will entitle it to partake in the rewards of
+    # today's actions, which will seed its reward expectations.
+    is_fulfilled = sn.is_fulfilled(self)
+    if not is_fulfilled:
+      raise AssertionError('New synapton should be made from instantly fulfilled conditions.')
+    sn.did_fire = True
 
 
 

@@ -65,6 +65,7 @@ class Synapton:
     self.flagged = False
     self.did_fire = False
     self.did_make_quota = False
+    self.is_tentative = False
 
 
   def add_random_synapticles(self, experience_state, chaining_probability=0):
@@ -181,6 +182,11 @@ class Synapton:
     retval += ' (+{})'.format(self.expectation)
     if self.command:
       retval += ' => "{}"'.format(self.command)
+    if not self.did_make_quota:
+      retval = 'X-' + retval
+    if self.is_tentative:
+      retval = '...' + retval
     return retval
+
 
 

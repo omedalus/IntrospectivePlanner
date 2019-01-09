@@ -27,7 +27,7 @@ for i in range(0, args.ngames):
     organism.receive_reinforcement(1000 * game.par / game.turn)
 
   imod = (i+1) % rint
-  turn_total += game.turn
+  turn_total += (game.turn / game.par)
 
 
   if imod == 0:
