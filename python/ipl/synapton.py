@@ -33,9 +33,8 @@ class Synapton:
     # the quota was missed by. For now, it doesn't matter.
     self.did_make_quota = True
 
-    # This synapton may optionally be linked to a command. This is the command
-    # that gains candidacy if this synapton is fulfilled.
-    self.command = command
+    # This synapton may optionally project to another synapton to override 
+    self.projection = command
 
     # Keeps track of whether or not this synapton has been flagged for various
     # recursive operations that are involved in maintenance and parsimony, such

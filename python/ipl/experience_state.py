@@ -21,14 +21,6 @@ class ExperienceState:
     # The most recent command that the organism sent to the game.
     self.last_command = None
 
-    # Collection of named atoms that are currently being experienced 
-    # by the organism. 
-    self.inputs = set()
-
-    # Collection of command strings that are currently available for output.
-    self.outputs = set()
-
-
     # A map of named synaptons. Synaptons get checked against
     # an existing experience state, so checking them is a free action.
     # NOTE: Maybe the organism can choose to check a named synapton,

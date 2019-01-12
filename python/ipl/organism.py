@@ -59,7 +59,7 @@ class Organism:
 
 
     desperation = 0
-    luxury = 2
+    luxury = 0
     while True:
       self.exst.start_turn()
 
