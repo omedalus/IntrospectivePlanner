@@ -45,7 +45,9 @@ class Organism:
         solver='lbfgs',
         warm_start=True)
 
-  def handle_sensor_input(self, sensors, force_action=None):
+    self.action_generator.consequence_generator = self.consequence_generator
+
+  def handle_sensor_input(self, sensors):
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}', sensors)
 
@@ -53,7 +55,11 @@ class Organism:
     # Reinforce the actual observed subsequent sensor result.
 
     if self.sensors and self.action:
-      observed_training_vector = self.sensors + self.action + sensors
+      observed_training_vector = []
+      observed_training_vector += self.sensors
+      observed_training_vector += self.action.actuators
+      observed_training_vector += sensors
+
       self.consequence_likelihood_estimator.fit(
           [observed_training_vector], [1])
 
@@ -61,12 +67,25 @@ class Organism:
       # calculate the magnitude of the counterfactuality, and
       # punish accordingly.
     
-    # Generate potential actions based on predicted outcomes.
     self.sensors = sensors
+    self.action = None
+
+
+  def choose_action(self, force_action=None):
+    """Generate potential actions based on predicted outcomes.
+    Arguments:
+      force_action {list}: A vector of actuator states that the organism will be forced to perform.
+    """
     self.action_generator.generate()
     self.action = self.action_generator.selected_action
     if force_action:
-      self.action = force_action
+      self.action = nnplanner.Action()
+      self.action.actuators = force_action
+      self.action.evaluate(
+        self.consequence_generator
+      )
+    else:
+      raise NotImplementedError("We're not selecting random actions yet.")
 
     if self.verbosity > 0:
       print('ORGANISM: Committing to action: {}', self.action)

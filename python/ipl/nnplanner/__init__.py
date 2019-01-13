@@ -1,6 +1,6 @@
 
 
-from .action_generator import *
+from .action import *
 from .consequence import *
 
 

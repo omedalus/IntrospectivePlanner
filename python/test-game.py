@@ -16,10 +16,20 @@ action_program = [
 ]
 
 for iturn, pa in enumerate(action_program):
-  print('\nRUNNER: Turn {}'.format(iturn))
-  oa = organism.handle_sensor_input(game.sensors(), pa)
-  game.act(oa)
+  print('\nRUNNER: Turn {}'.format(iturn + 1))
+  organism.handle_sensor_input(game.sensors())
 
-print('\n')
+  oa = organism.choose_action(pa)
+  if oa.consequences and len(oa.consequences):
+    print('Expected consequences:')
+    for consequence in oa.consequences:
+      print('\t{}'.format(consequence))
+  else:
+    print('(Action has no consequences)')
+
+  game.act(oa.actuators)
+  
+
+print()
 print('RUNNER: Predefined action sequence complete.')
-oa = organism.handle_sensor_input(game.sensors(), pa)
+organism.handle_sensor_input(game.sensors())
