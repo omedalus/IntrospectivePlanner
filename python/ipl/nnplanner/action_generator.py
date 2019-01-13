@@ -4,11 +4,7 @@ class ActionGeneratorParams:
   """
   An object that configures an action generator.
   """
-  def __init__(self,
-               action_vector_dimensionality,
-               activity_level_mean,
-               activity_level_stdev,
-               population_size):
+  def __init__(self, action_vector_dimensionality, activity_level_mean, activity_level_stdev, population_size):
     """
     @param action_vector_dimensionality: Number of elements in an action vector.
     @param activity_level_mean: The average number of nonzero elements in the vector.
@@ -40,6 +36,7 @@ class ActionGenerator:
     """
     self.params = params
     self.population = []
+    self.selected_action = None
 
 
   def __generate_one(self):
@@ -47,7 +44,14 @@ class ActionGenerator:
     Generate one action vector.
     """
     retval = [0] * self.params.action_vector_dimensionality
+
     nactive = numpy.random.normal(self.params.activity_level_mean, self.params.activity_level_stdev)
+    if nactive < 0:
+      nactive = 0
+    nactive = int(nactive)
+    if nactive >= self.params.action_vector_dimensionality:
+      nactive = self.params.action_vector_dimensionality
+
     indices = numpy.random.choice(self.params.action_vector_dimensionality, nactive, False)
     for index in indices:
       retval[index] = 1
@@ -58,11 +62,16 @@ class ActionGenerator:
     """
     Creates a population of proposed actions.
     """
+    self.population = []
+    self.selected_action = None
     for n in range(self.params.population_size):
       newvec = self.__generate_one()
       if any([newvec == v for v in self.population]):
         continue
       self.population.append(newvec)
+    
+    ia = numpy.random.choice(len(self.population))
+    self.selected_action = self.population[ia]
       
 
 

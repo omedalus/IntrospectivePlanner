@@ -1,5 +1,4 @@
 
-from ..action import Action
 
 import random
 
@@ -70,10 +69,6 @@ class TeeMazeGame:
 
   def get_attemptable_actions(self):
     retval = set()
-    retval.add(Action('GO'))
-    retval.add(Action('CAN_GO'))
-    retval.add(Action('TURN LEFT'))
-    retval.add(Action('TURN RIGHT'))
 
 
 

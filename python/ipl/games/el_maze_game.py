@@ -1,6 +1,4 @@
 
-from ..action import Action
-
 import random
 
 CARDINALS = ['NORTH', 'EAST', 'SOUTH', 'WEST']
@@ -63,6 +61,15 @@ class ElMazeGame:
     self.__bend_position = num_steps_before_bend
 
 
+
+  def eof(self):
+    """
+    True when the game is over.
+    """
+    return 'VICTORY' in self.state()
+
+
+
   def io_vector_labels(self):
     """
     Gets the human-readable names of each field in the input and output vectors.
@@ -114,7 +121,6 @@ class ElMazeGame:
       return
 
     cmd = cmds[0]
-    print(cmd)
 
     self.turn += 1
     self.__last_cmd = cmd
