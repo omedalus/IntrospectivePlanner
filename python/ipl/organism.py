@@ -12,11 +12,16 @@ class Organism:
 
   def __init__(self):
     self.game = None
+
     self.action_generator = None
-    self.next_state_predictor = None
+    self.next_state_evaluator = None
+    self.consequence_generator = None
   
     self.sensors = None
     self.action = None
+
+    self.verbosity = 0
+
 
   def init_game(self, game):
     self.game = game
@@ -29,7 +34,7 @@ class Organism:
 
     ninputs = 2 * nsensors + nactions
     nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
-    self.next_state_predictor = sklearn.neural_network.MLPRegressor(
+    self.next_state_evaluator = sklearn.neural_network.MLPRegressor(
         hidden_layer_sizes=(nhidden),
         activation='logistic',
         solver='lbfgs',
@@ -41,7 +46,7 @@ class Organism:
 
     if self.sensors and self.action:
       observed_training_vector = self.sensors + self.action + sensors
-      self.next_state_predictor.fit([observed_training_vector], [1])
+      self.next_state_evaluator.fit([observed_training_vector], [1])
 
       # TODO: For each predicted outcome of the selected action,
       # calculate the magnitude of the counterfactuality, and

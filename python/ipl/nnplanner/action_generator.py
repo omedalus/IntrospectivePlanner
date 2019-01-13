@@ -64,7 +64,7 @@ class ActionGenerator:
     """
     self.population = []
     self.selected_action = None
-    for n in range(self.params.population_size):
+    for _ in range(self.params.population_size):
       newvec = self.__generate_one()
       if any([newvec == v for v in self.population]):
         continue
@@ -73,6 +73,5 @@ class ActionGenerator:
     ia = numpy.random.choice(len(self.population))
     self.selected_action = self.population[ia]
       
-
 
 
