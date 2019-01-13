@@ -45,6 +45,12 @@ class Organism:
         solver='lbfgs',
         warm_start=True)
 
+    victory_field_idx = game.io_vector_labels()['sensors'].index('VICTORY')
+    def fn_utility(s): return s[victory_field_idx]
+    self.consequence_generator.sensors_utility_metric = fn_utility
+    
+
+
     self.action_generator.consequence_generator = self.consequence_generator
 
   def handle_sensor_input(self, sensors):

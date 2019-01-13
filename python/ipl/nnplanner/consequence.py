@@ -60,7 +60,11 @@ class Consequence:
   def __repr__(self):
     retval = 'CONSEQUENCE: '
     retval += str(self.sensors)
-    retval += ' ({}% ${})'.format( int(100*self.estimated_probability), self.estimated_absolute_utility)
+    retval += ' ({}% ${:.2f} = ${:.2f})'.format( 
+        int(100*self.estimated_probability), 
+        self.estimated_absolute_utility,
+        self.estimated_weighted_utility
+        )
     return retval
 
 
@@ -84,8 +88,8 @@ class ConsequenceGenerator:
     Arguments:
       params {ConsequenceGeneratorParams} -- Configuration parameters.
     """
-    print('Creating consequence')
     self.params = params
+    self.sensors_utility_metric = None
 
 
 
@@ -101,7 +105,9 @@ class ConsequenceGenerator:
       if consequence in population:
         continue
 
-      consequence.evaluate()
+      consequence.evaluate(
+        sensors_utility_metric=self.sensors_utility_metric
+      )
 
       population.append(consequence)
 
