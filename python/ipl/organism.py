@@ -30,7 +30,10 @@ class Organism:
     ninputs = 2 * nsensors + nactions
     nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
     self.next_state_predictor = sklearn.neural_network.MLPRegressor(
-        hidden_layer_sizes=(1))
+        hidden_layer_sizes=(nhidden),
+        activation='logistic',
+        solver='lbfgs',
+        warm_start=True)
 
   def handle_sensor_input(self, sensors, force_action=None):
     # First, learn from the last turn's experience.
