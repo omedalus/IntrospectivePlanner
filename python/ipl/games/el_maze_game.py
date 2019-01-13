@@ -56,17 +56,33 @@ class ElMazeGame:
 
     self.__is_alive = True 
     self.__position = 0
-    self.__orientation = random.choice(CARDINALS)
+    self.__orientation = 'NORTH' # random.choice(CARDINALS)
     self.__last_cmd = None
 
     self.__victory_position = num_steps_before_bend + num_steps_after_bend
     self.__bend_position = num_steps_before_bend
 
 
+  def io_vector_labels(self):
+    """
+    Gets the human-readable names of each field in the input and output vectors.
+    Useful for keeping track of how the input and output vectors are supposed
+    to map to the behaviors of the organism and its actions in the world.
+    """
+    return {
+      'sensors': ['FORWARD', 'LEFT', 'RIGHT', 'BACK', 'VICTORY'],
+      'actuators': ['GO', 'TURN LEFT', 'TURN RIGHT', 'TURN BACK']
+    }
 
-  def generate_random_command(self):
-    commands = ['GO', 'TURN LEFT', 'TURN RIGHT', 'TURN BACK']
-    return random.choice(commands)
+
+  def sensors(self):
+    """
+    Gets the vector of current sensor readings.
+    """
+    retval = [1 if symbol in self.state() else 0 for symbol in self.io_vector_labels()['sensors']]
+    return retval
+
+
 
 
   def state(self):
@@ -90,31 +106,16 @@ class ElMazeGame:
     return relative_exits
 
 
-  def get_available_commands(self):
-    """Determines what commands are available to perform, given the current world state.
-    @return: set of strings.
-    """
-    retval = set([
-      'TURN LEFT',
-      'TURN RIGHT',
-      'TURN BACK'
-    ])
-    gs = self.state()
-    if 'FORWARD' in gs:
-      retval.add('GO')
-    return retval
 
+  # Submits the actuator vector for evaluation.
+  def act(self, actuators):
+    cmds = [label for idx,label in enumerate(self.io_vector_labels()['actuators']) if actuators[idx]>0]
+    if len(cmds) != 1:
+      return
 
-  def set_experience(self, experience_state):
-    gs = self.state()
-    experience_state.inputs = set(gs)
-    experience_state.outputs = self.get_available_commands()
-    experience_state.last_command = self.__last_cmd
+    cmd = cmds[0]
+    print(cmd)
 
-
-
-  # Performs command cmd, which is given as a string.
-  def command(self, cmd):
     self.turn += 1
     self.__last_cmd = cmd
 
