@@ -4,6 +4,7 @@ import sklearn.neural_network  # pylint: disable=E0401
 
 from .action import Action
 from .outcome import Outcome
+from .experience import Experience
 
 
 class OutcomeLikelihoodEstimatorParams:
@@ -30,14 +31,11 @@ class OutcomeLikelihoodEstimator:
     ninputs = 2 * params.n_sensors + params.n_actuators
     nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
 
-    self.all_learned = []
-
     # TODO: Play around with number and size of hidden layers.
     self.neuralnet = sklearn.neural_network.MLPRegressor(
         hidden_layer_sizes=(nhidden),
         activation='logistic',
-        solver='lbfgs',
-        warm_start=True)
+        solver='lbfgs')
 
 
 
@@ -82,95 +80,30 @@ class OutcomeLikelihoodEstimator:
 
 
 
-  def learn(self, sensors_prev, action, sensors_observed, sensorses_expected, verbosity=0):
-    """Tell the estimator that a certain combination of sensors, actions, etc.,
-    let to an observed outcome, and not any of the other outcomes that the estimator
+  def learn(self, experience_repo):
+    """Tell the estimator that certain combinations of sensors, actions, etc.,
+    led to certain observed outcome, and not any of the other outcomes that the estimator
     might have previously believed had high likelihoods.
     Arguments:
-      sensors_prev {Outcome|list} -- The previous sensor vector, in which context the action was taken.
-      action {Action|list} -- The action that was taken in the context of the sensors_prev sensor state.
-      sensors_observed {Outcome|list} -- The sensor state that was subsequently observed.
-      sensorses_expected {list(Outcome)|list(list)} -- Other sensor states that weren't observed.
+      experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
     """
-    if isinstance(sensors_prev, Outcome):
-      sensors_prev = sensors_prev.sensors
+    tvecs = experience_repo.training_vectors()
+    Xall = [tv[0] for tv in tvecs]
+    yall = [tv[1] for tv in tvecs]
 
-    if isinstance(action, Action):
-      action = action.actuators
-
-    if isinstance(sensors_observed, Outcome):
-      sensors_observed = sensors_observed.sensors
-
-    tvecs_X = []
-    tvecs_y = []
-
-    # Teach it what *did* happen.
-    observed_training_vector = []
-    observed_training_vector += sensors_prev
-    observed_training_vector += action
-    observed_training_vector += sensors_observed
-    tvecs_X.append(observed_training_vector)
-    tvecs_y.append(1)
-
-    if verbosity > 0:
-      print('ESTIMATOR: Observed vector: {}  s=1'.format(sensors_observed))
-
-    # Teach it what *didn't* happen, but which we previously thought *might* happen.
-    for oex in sensorses_expected:
-      if isinstance(oex, Outcome):
-        oex = oex.sensors
-
-      if oex == sensors_observed:
-        continue
-
-      #s = self.__relative_similarity(sensors_observed, oex)
-      s = 0
-      
-      counterfactual_training_vector = []
-      counterfactual_training_vector += sensors_prev
-      counterfactual_training_vector += action
-      counterfactual_training_vector += oex
-
-      if verbosity > 0:
-        print('ESTIMATOR: Counterfactual expected vector: {}  s={:.2f}'.format(oex, s))
-
-      tvecs_X.append(counterfactual_training_vector)
-      tvecs_y.append(s)
-
-    for tvec_X, tvec_y in zip(tvecs_X, tvecs_y):
-      self.all_learned.append( (tvec_X, tvec_y) )
-    if verbosity > 0:
-      print('ESTIMATOR: Learned vector count: {}'.format(len(self.all_learned)))
-
-    self.neuralnet.fit(tvecs_X, tvecs_y)
+    self.neuralnet.fit(Xall, yall)
 
 
 
-  def estimate(self, sensors_prev, action, sensors_next):
+  def estimate(self, experience_possible):
     """Compute the likelihood that, after performing action action in the context of sensor state
     sensors_prev, that the next sensor state encountered will be sensors_next.
     Arguments:
-      sensors_prev {Outcome|list} -- The previous sensor vector, in which context the action was taken.
-      action {Action|list} -- The action that was taken in the context of the sensors_prev sensor state.
-      sensors_next {Outcome|list} -- The sensor state that might be observed after the action is taken.
+      experience_possible {Experience} -- An experience that the organism might have.
     Returns:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
-    # NOTE: This method may make sense to be called in bulk, with sensors_next instead being sensorses_next.
-    if isinstance(sensors_prev, Outcome):
-      sensors_prev = sensors_prev.sensors
-
-    if isinstance(action, Action):
-      action = action.actuators
-
-    if isinstance(sensors_next, Outcome):
-      sensors_next = sensors_next.sensors
-    
-    query_vector = []
-    query_vector += sensors_prev
-    query_vector += action
-    query_vector += sensors_next
-
+    query_vector = experience_possible.observed_vector()
     predictions = self.neuralnet.predict([query_vector])
     return predictions[0]
 

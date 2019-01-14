@@ -43,6 +43,8 @@ class Organism:
 
     self.action_generator.outcome_generator = self.outcome_generator
     
+    self.experience_repo = nnplanner.ExperienceRepo()
+
     self.reset_state()
 
 
@@ -56,17 +58,22 @@ class Organism:
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}'.format(sensors))
 
-    # Learn from the last turn's experience.
-    # Reinforce the actual observed subsequent sensor result.
-
     if self.sensors and self.action:
-      self.outcome_likelihood_estimator.learn(
+      # Learn from the last turn's experience.
+      # Reinforce the actual observed subsequent sensor result.
+      experience = nnplanner.Experience(
         self.sensors,
-        self.action,
+        self.action.actuators,
         sensors,
-        self.action.outcomes,
-        verbosity=self.verbosity
+        [o.sensors for o in self.action.outcomes]
       )
+
+      self.experience_repo.experiences.add(experience)
+      
+      self.outcome_likelihood_estimator.learn(self.experience_repo)
+
+      if self.verbosity > 0:
+        print('ORGANISM: Experience repo size: {}'.format(len(self.experience_repo.experiences)))
     
     self.sensors = sensors
     self.action = None
