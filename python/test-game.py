@@ -4,7 +4,7 @@ game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
 organism.verbosity = 1
 
-organism.init_game(game)
+organism.configure(game.player_config())
 
 action_program = [
     [1, 0, 0, 0],
@@ -15,6 +15,7 @@ action_program = [
     [1, 0, 0, 0]
 ]
 
+organism.reset_state()
 for iturn, pa in enumerate(action_program):
   print('\nRUNNER: Turn {}'.format(iturn + 1))
   organism.handle_sensor_input(game.sensors())

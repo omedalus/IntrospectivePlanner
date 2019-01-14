@@ -69,6 +69,19 @@ class ElMazeGame:
     return 'VICTORY' in self.state()
 
 
+  def player_config(self):
+    """Gets a dictionary of configuration arguments that give a player AI information
+    about how to initialize.
+    Returns:
+      {dict} -- Dictionary of configuration arguments.
+    """
+    vlabels = self.io_vector_labels()
+    return {
+      'n_sensors': len(vlabels['sensors']),
+      'n_actuators': len(vlabels['actuators']),
+      'victory_field_idx': vlabels['sensors'].index('VICTORY')
+    }
+
 
   def io_vector_labels(self):
     """

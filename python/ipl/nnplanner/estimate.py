@@ -138,6 +138,35 @@ class OutcomeLikelihoodEstimator:
 
 
 
+  def estimate(self, sensors_prev, action, sensors_next):
+    """Compute the likelihood that, after performing action action in the context of sensor state
+    sensors_prev, that the next sensor state encountered will be sensors_next.
+    Arguments:
+      sensors_prev {Outcome|list} -- The previous sensor vector, in which context the action was taken.
+      action {Action|list} -- The action that was taken in the context of the sensors_prev sensor state.
+      sensors_next {Outcome|list} -- The sensor state that might be observed after the action is taken.
+    Returns:
+      {float} -- The estimated relative likelihood of seeing the outcome.
+    """
+    # NOTE: This method may make sense to be called in bulk, with sensors_next instead being sensorses_next.
+    if isinstance(sensors_prev, Outcome):
+      sensors_prev = sensors_prev.sensors
+
+    if isinstance(action, Action):
+      action = action.actuators
+
+    if isinstance(sensors_next, Outcome):
+      sensors_next = sensors_next.sensors
+    
+    query_vector = []
+    query_vector += sensors_prev
+    query_vector += action
+    query_vector += sensors_next
+
+    predictions = self.__neuralnet.predict([query_vector])
+    return predictions[0]
+
+
 
 
 
