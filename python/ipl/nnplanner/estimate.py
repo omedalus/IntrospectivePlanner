@@ -101,19 +101,21 @@ class OutcomeLikelihoodEstimator:
     if isinstance(sensors_observed, Outcome):
       sensors_observed = sensors_observed.sensors
 
+    tvecs_X = []
+    tvecs_y = []
+
     # Teach it what *did* happen.
     observed_training_vector = []
     observed_training_vector += sensors_prev
     observed_training_vector += action
     observed_training_vector += sensors_observed
-    self.__neuralnet.fit([observed_training_vector], [1])
+    tvecs_X.append(observed_training_vector)
+    tvecs_y.append(1)
 
     if verbosity > 0:
       print('ESTIMATOR: Observed vector: {}  s=1'.format(sensors_observed))
 
     # Teach it what *didn't* happen, but which we previously thought *might* happen.
-    expected_training_vectors = []
-    expected_training_outcomes = []
     for oex in sensorses_expected:
       if isinstance(oex, Outcome):
         oex = oex.sensors
@@ -121,20 +123,21 @@ class OutcomeLikelihoodEstimator:
       if oex == sensors_observed:
         continue
 
-      s = self.__relative_similarity(sensors_observed, oex)
+      #s = self.__relative_similarity(sensors_observed, oex)
+      s = 0
       
       counterfactual_training_vector = []
       counterfactual_training_vector += sensors_prev
       counterfactual_training_vector += action
       counterfactual_training_vector += oex
 
-      expected_training_vectors.append(counterfactual_training_vector)
-      expected_training_outcomes.append(s)
-
       if verbosity > 0:
         print('ESTIMATOR: Counterfactual expected vector: {}  s={:.2f}'.format(oex, s))
-    
-    self.__neuralnet.fit(expected_training_vectors, expected_training_outcomes)
+
+      tvecs_X.append(counterfactual_training_vector)
+      tvecs_y.append(s)
+
+    self.__neuralnet.fit(tvecs_X, tvecs_y)
 
 
 
