@@ -1,7 +1,6 @@
 
 
 import math
-import sklearn.neural_network # pylint: disable=E0401
 
 import ipl.nnplanner as nnplanner
 
@@ -38,13 +37,8 @@ class Organism:
     cg_params = nnplanner.OutcomeGeneratorParams(nsensors, nsensors*2)
     self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
-    ninputs = 2 * nsensors + nactions
-    nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
-    self.outcome_likelihood_estimator = sklearn.neural_network.MLPRegressor(
-        hidden_layer_sizes=(nhidden),
-        activation='logistic',
-        solver='lbfgs',
-        warm_start=True)
+    ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(nsensors, nactions)
+    self.outcome_likelihood_estimator = nnplanner.OutcomeLikelihoodEstimator(ole_params)
 
     victory_field_idx = game.io_vector_labels()['sensors'].index('VICTORY')
     def fn_utility(s): return s[victory_field_idx]
@@ -58,21 +52,17 @@ class Organism:
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}', sensors)
 
-    # First, learn from the last turn's experience.
+    # Learn from the last turn's experience.
     # Reinforce the actual observed subsequent sensor result.
 
     if self.sensors and self.action:
-      observed_training_vector = []
-      observed_training_vector += self.sensors
-      observed_training_vector += self.action.actuators
-      observed_training_vector += sensors
-
-      self.outcome_likelihood_estimator.fit(
-          [observed_training_vector], [1])
-
-      # TODO: For each predicted outcome of the selected action,
-      # calculate the magnitude of the counterfactuality, and
-      # punish accordingly.
+      self.outcome_likelihood_estimator.learn(
+        self.sensors,
+        self.action,
+        sensors,
+        self.action.outcomes,
+        verbosity=self.verbosity
+      )
     
     self.sensors = sensors
     self.action = None
