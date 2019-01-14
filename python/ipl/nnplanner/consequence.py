@@ -1,5 +1,7 @@
 import numpy  # pylint: disable=E0401
 
+
+
 class Consequence:
   def __init__(self):
     self.sensors = []
@@ -12,12 +14,16 @@ class Consequence:
 
     self.responses = []
 
+
+
   def fill_random(self, params):
     """Populate the sensors with a random vector.
     Arguments:
       params {ConsequenceGeneratorParams} -- Config object with info about how to construct the vector.
     """
     self.sensors = list(numpy.random.randint(2, size=params.sensor_vector_dimensionality))
+
+
 
   def evaluate(self, sensors_utility_metric=None, consequence_likelihood_estimator=None, with_sensors=None, with_action=None):
     """Compute the likelihood and utility of this Consequence.
@@ -53,9 +59,42 @@ class Consequence:
       self.estimated_relative_likelihood = 0
 
 
+    def relative_similarity(self, comp_sensors):
+      """Compute the proximity of this consequence's sensor vector to the given one.
+      Arguments:
+        comp_sensors {list} -- A sensor vector to compare against.
+      Returns:
+        {float} -- A float between 0 and 1, where 1 means the two vectors are identical 
+            and 0 means the two vectors differ by at least .5 in every element. 
+      """
+      if len(comp_sensors) != len(self.sensors):
+        raise ValueError('comp_sensor array needs to be the same length as self.sensors')
+
+      # This is just a const that tells us how different we permit two different
+      # sensor values to be before we give no reward at all for the counterfactual
+      # one. By setting it to <=.5, we can ensure that the trainee can't "cheat" by
+      # always outputting exactly .5 and always getting partial credit regardless of
+      # if the desired value is 0 or 1.
+      max_piecewise_diff = .5
+
+      # I could do something cleverly Pythonic here, but I'd really rather make
+      # the math explicit and obvious to make coding and debugging easier.
+      total_prox = 0
+      for ms, cs in zip(self.sensors, comp_sensors):
+        abs_diff = abs(ms - cs)
+        magnified_diff = abs_diff / max_piecewise_diff
+        truncated_magnified_diff = min(magnified_diff, 1)
+        prox = 1 - truncated_magnified_diff
+        total_prox += prox
+
+      normalized_prox = total_prox / len(self.sensors)
+      return normalized_prox
+
 
   def __eq__(self, other):
     return self.sensors == other.sensors
+
+
 
   def __repr__(self):
     retval = 'CONSEQUENCE: '
@@ -69,6 +108,12 @@ class Consequence:
 
 
 
+
+
+
+
+
+
 class ConsequenceGeneratorParams:
   def __init__(self, sensor_vector_dimensionality, population_size):
     """
@@ -78,6 +123,11 @@ class ConsequenceGeneratorParams:
     self.sensor_vector_dimensionality = sensor_vector_dimensionality
     self.population_size = population_size
     
+
+
+
+
+
 
 class ConsequenceGenerator:
   """An object that generates random sensor state vectors.
