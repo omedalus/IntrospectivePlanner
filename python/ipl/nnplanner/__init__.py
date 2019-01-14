@@ -1,7 +1,5 @@
 
 
 from .action import *
-from .consequence import *
-
-
+from .outcome import *
 

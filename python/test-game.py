@@ -20,12 +20,12 @@ for iturn, pa in enumerate(action_program):
   organism.handle_sensor_input(game.sensors())
 
   oa = organism.choose_action(pa)
-  if oa.consequences and len(oa.consequences):
-    print('Expected consequences:')
-    for consequence in oa.consequences:
-      print('\t{}'.format(consequence))
+  if oa.outcomes and len(oa.outcomes):
+    print('Expected outcomes:')
+    for outcome in oa.outcomes:
+      print('\t{}'.format(outcome))
   else:
-    print('(Action has no consequences)')
+    print('(Action has no outcomes)')
 
   game.act(oa.actuators)
   

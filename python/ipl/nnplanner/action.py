@@ -2,24 +2,24 @@ import numpy  # pylint: disable=E0401
 
 class Action:
   """
-  An action and possible consequences.
+  An action and possible outcomes.
   """
   def __init__(self):
     self.actuators = []
-    self.consequences = []
+    self.outcomes = []
     self.expected_utility = 0
 
 
-  def evaluate(self, consequence_generator):
+  def evaluate(self, outcome_generator):
     """Computes the action's expected utility by examining the action's likely outcomes
     and weighing their utilities accordingly.
     Arguments:
-      consequence_generator {ConsequenceGenerator} -- An object that lets us generate consequences.
+      outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
     """
-    self.consequences = consequence_generator.generate()
+    self.outcomes = outcome_generator.generate()
     
     # TODO: Action's utility is the weighted sum of the utilities of 
-    # all of its expected consequences.
+    # all of its expected outcomes.
 
 
   def fill_random(self, params):
@@ -49,7 +49,7 @@ class Action:
   def __repr__(self):
     retval = 'ACTION: '
     retval += str(self.actuators)
-    retval += ' (-> {} consequences)'.format(len(self.consequences))
+    retval += ' (-> {} outcomes)'.format(len(self.outcomes))
     return retval
 
 
@@ -89,7 +89,7 @@ class ActionGenerator:
     @param params: An ActionGeneratorParams object.
     """
     self.params = params
-    self.consequence_generator = None
+    self.outcome_generator = None
 
 
   def generate(self):
@@ -105,8 +105,8 @@ class ActionGenerator:
       if action in population:
         continue
 
-      if self.consequence_generator:
-        action.evaluate(self.consequence_generator)
+      if self.outcome_generator:
+        action.evaluate(self.outcome_generator)
 
 
       population.append(action)

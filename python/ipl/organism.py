@@ -15,13 +15,14 @@ class Organism:
     self.game = None
 
     self.action_generator = None
-    self.consequence_likelihood_estimator = None
-    self.consequence_generator = None
+    self.outcome_likelihood_estimator = None
+    self.outcome_generator = None
   
     self.sensors = None
     self.action = None
 
     self.verbosity = 0
+
 
 
   def init_game(self, game):
@@ -34,12 +35,12 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     nsensors = len(self.game.io_vector_labels()['sensors'])
-    cg_params = nnplanner.ConsequenceGeneratorParams(nsensors, nsensors*2)
-    self.consequence_generator = nnplanner.ConsequenceGenerator(cg_params)
+    cg_params = nnplanner.OutcomeGeneratorParams(nsensors, nsensors*2)
+    self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
     ninputs = 2 * nsensors + nactions
     nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
-    self.consequence_likelihood_estimator = sklearn.neural_network.MLPRegressor(
+    self.outcome_likelihood_estimator = sklearn.neural_network.MLPRegressor(
         hidden_layer_sizes=(nhidden),
         activation='logistic',
         solver='lbfgs',
@@ -47,11 +48,11 @@ class Organism:
 
     victory_field_idx = game.io_vector_labels()['sensors'].index('VICTORY')
     def fn_utility(s): return s[victory_field_idx]
-    self.consequence_generator.sensors_utility_metric = fn_utility
+    self.outcome_generator.sensors_utility_metric = fn_utility
     
 
 
-    self.action_generator.consequence_generator = self.consequence_generator
+    self.action_generator.outcome_generator = self.outcome_generator
 
   def handle_sensor_input(self, sensors):
     if self.verbosity > 0:
@@ -66,7 +67,7 @@ class Organism:
       observed_training_vector += self.action.actuators
       observed_training_vector += sensors
 
-      self.consequence_likelihood_estimator.fit(
+      self.outcome_likelihood_estimator.fit(
           [observed_training_vector], [1])
 
       # TODO: For each predicted outcome of the selected action,
@@ -88,7 +89,7 @@ class Organism:
       self.action = nnplanner.Action()
       self.action.actuators = force_action
       self.action.evaluate(
-        self.consequence_generator
+        self.outcome_generator
       )
     else:
       raise NotImplementedError("We're not selecting random actions yet.")
