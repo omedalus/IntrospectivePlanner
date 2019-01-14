@@ -14,8 +14,6 @@ class OutcomeLikelihoodEstimatorParams:
     self.n_actuators = n_actuators
     #self.n_registers = 0
 
-    self.__neuralnet = None
-
 
 class OutcomeLikelihoodEstimator:
   """An object that can be given a set of vectors representing both
@@ -32,8 +30,10 @@ class OutcomeLikelihoodEstimator:
     ninputs = 2 * params.n_sensors + params.n_actuators
     nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
 
+    self.all_learned = []
+
     # TODO: Play around with number and size of hidden layers.
-    self.__neuralnet = sklearn.neural_network.MLPRegressor(
+    self.neuralnet = sklearn.neural_network.MLPRegressor(
         hidden_layer_sizes=(nhidden),
         activation='logistic',
         solver='lbfgs',
@@ -137,7 +137,12 @@ class OutcomeLikelihoodEstimator:
       tvecs_X.append(counterfactual_training_vector)
       tvecs_y.append(s)
 
-    self.__neuralnet.fit(tvecs_X, tvecs_y)
+    for tvec_X, tvec_y in zip(tvecs_X, tvecs_y):
+      self.all_learned.append( (tvec_X, tvec_y) )
+    if verbosity > 0:
+      print('ESTIMATOR: Learned vector count: {}'.format(len(self.all_learned)))
+
+    self.neuralnet.fit(tvecs_X, tvecs_y)
 
 
 
@@ -166,7 +171,7 @@ class OutcomeLikelihoodEstimator:
     query_vector += action
     query_vector += sensors_next
 
-    predictions = self.__neuralnet.predict([query_vector])
+    predictions = self.neuralnet.predict([query_vector])
     return predictions[0]
 
 
