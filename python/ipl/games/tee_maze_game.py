@@ -68,7 +68,8 @@ class TeeMazeGame:
 
 
   def get_attemptable_actions(self):
-    retval = set()
+    #retval = set()
+    pass
 
 
 
