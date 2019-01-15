@@ -54,22 +54,27 @@ class Organism:
     self.action = None
 
 
+
+  def maintenance(self):
+    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo)
+
+
+
   def handle_sensor_input(self, sensors):
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}'.format(sensors))
 
     if self.sensors and self.action:
-      # Learn from the last turn's experience.
-      # Reinforce the actual observed subsequent sensor result.
-      experience = nnplanner.Experience(
+      # Learn from the last turn's experience. This not only involves learning that
+      # the thing we observed happened, but it also involves learning all the things
+      # we thought might happen that didn't.
+      self.experience_repo.add(
         self.sensors,
         self.action.actuators,
         sensors,
         [o.sensors for o in self.action.outcomes]
       )
 
-      self.experience_repo.experiences.add(experience)
-      
       self.outcome_likelihood_estimator.learn(self.experience_repo)
 
       if self.verbosity > 0:

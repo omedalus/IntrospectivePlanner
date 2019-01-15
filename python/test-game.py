@@ -34,3 +34,5 @@ for iturn, pa in enumerate(action_program):
 print()
 print('RUNNER: Predefined action sequence complete.')
 organism.handle_sensor_input(game.sensors())
+
+organism.maintenance()

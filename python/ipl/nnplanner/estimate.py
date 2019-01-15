@@ -1,6 +1,8 @@
 
 import math
+import random
 import sklearn.neural_network  # pylint: disable=E0401
+import sklearn.base  # pylint: disable=E0401
 
 from .action import Action
 from .outcome import Outcome
@@ -10,9 +12,11 @@ from .experience import Experience
 class OutcomeLikelihoodEstimatorParams:
   """Configuration for an estimator.
   """
-  def __init__(self, n_sensors, n_actuators):
+  def __init__(self, n_sensors, n_actuators, **kwargs):
     self.n_sensors = n_sensors
     self.n_actuators = n_actuators
+
+    self.forget_delta_threshold = kwargs.get('forget_delta_threshold') or 0.05
     #self.n_registers = 0
 
 
@@ -35,7 +39,8 @@ class OutcomeLikelihoodEstimator:
     self.neuralnet = sklearn.neural_network.MLPRegressor(
         hidden_layer_sizes=(nhidden),
         activation='logistic',
-        solver='lbfgs')
+        solver='lbfgs'
+    )
 
 
 
@@ -79,7 +84,6 @@ class OutcomeLikelihoodEstimator:
 
 
 
-
   def learn(self, experience_repo):
     """Tell the estimator that certain combinations of sensors, actions, etc.,
     led to certain observed outcome, and not any of the other outcomes that the estimator
@@ -87,11 +91,8 @@ class OutcomeLikelihoodEstimator:
     Arguments:
       experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
     """
-    tvecs = experience_repo.training_vectors()
-    Xall = [tv[0] for tv in tvecs]
-    yall = [tv[1] for tv in tvecs]
-
-    self.neuralnet.fit(Xall, yall)
+    tvecsX, tvecsY = experience_repo.training_data()
+    self.neuralnet.fit(tvecsX, tvecsY)
 
 
 
@@ -103,11 +104,45 @@ class OutcomeLikelihoodEstimator:
     Returns:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
-    query_vector = experience_possible.observed_vector()
+    query_vector = experience_possible.vector()
     predictions = self.neuralnet.predict([query_vector])
     return predictions[0]
 
 
+  def consolidate_experiences(self, experience_repo):
+    """Tries to determine which experiences can be removed from the repo, that will have a negligible effect
+    on the estimate results.
+    Arguments:
+      experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
+          This method has a side-effect of removing items from the repo.
+    Returns:
+      {list} -- A list of Experience objects that can be removed from the repo with no significant change
+          to the output of the estimator.
+    """
+    print('Repo size before consolidation: {}'.format(len(experience_repo.experiences)))
+
+    exps = list(experience_repo.experiences)
+    random.shuffle(exps)
+    for experience in exps:
+      est_before = self.estimate(experience)
+
+      tvecsX, tvecsY = experience_repo.training_data(without=experience)
+
+      nn_without = sklearn.base.clone(self.neuralnet)
+      nn_without.fit(tvecsX, tvecsY)
+
+      est_after = nn_without.predict([experience.vector()])[0]
+
+      delta = abs(est_after - est_before)
+      if delta >= self.params.forget_delta_threshold:
+        continue
+
+      # The NN *without* this experience is similar enough to the NN *with* 
+      # this experience that it might as well be removed.
+      experience_repo.remove(experience)
+
+    print('Repo size after consolidation: {}'.format(
+        len(experience_repo.experiences)))
 
 
 
