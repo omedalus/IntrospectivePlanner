@@ -30,7 +30,7 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     n_sensors = config['n_sensors']
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 20, .25, 10)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3)
     self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
