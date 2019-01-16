@@ -55,6 +55,9 @@ class Outcome:
       experience_possible = Experience(
           with_sensors, with_actuators, self.sensors)
       y = outcome_likelihood_estimator.estimate(experience_possible)
+      y = max(y, 0.0)
+      y = min(y, 1.0)      
+
       self.estimated_relative_likelihood = y
     else:
       self.estimated_relative_likelihood = 0
@@ -144,10 +147,6 @@ class OutcomeGenerator:
     population = population[:self.params.num_keep]
 
     # Normalize the likelihoods into probabilities.
-    min_likelihood = min([c.estimated_relative_likelihood for c in population])
-    for c in population:
-      c.estimated_relative_likelihood -= min_likelihood
-
     total_likelihood = sum([c.estimated_relative_likelihood for c in population])
     for c in population:
       if not total_likelihood:

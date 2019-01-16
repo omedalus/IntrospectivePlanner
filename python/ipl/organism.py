@@ -57,7 +57,11 @@ class Organism:
 
 
   def maintenance(self):
-    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo, 1, verbosity=self.verbosity)
+    max_memory_before_consolidation = 1000000
+    self.outcome_likelihood_estimator.consolidate_experiences(
+      self.experience_repo, 
+      max_memory_before_consolidation, 
+      verbosity=self.verbosity)
 
 
 
