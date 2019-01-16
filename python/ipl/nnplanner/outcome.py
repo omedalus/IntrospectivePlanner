@@ -27,7 +27,9 @@ class Outcome:
 
   def estimate_utility(self, 
       sensors_utility_metric=None, 
-      action_generator=None):
+      action_generator=None,
+      recursion_depth=0,
+      recursion_threshold=1):
     """Compute the utility of this Outcome.
     Arguments:
       sensors_utility_metric {function} -- A function that takes a sensors vector and returns a scalar
@@ -35,11 +37,18 @@ class Outcome:
           assumes a utility of 0.
       action_generator {ActionGenerator} -- A generator that can determine what subsequent actions can be
           performed in this outcome.
+      recursion_depth {int} -- How deep the current recursion has gotten.
+      recursion_threshold {float} -- Value between 0 and 1. Any outcomes with a utility below this level 
+          will be attempted to be boosted by recursing.
     """
     if sensors_utility_metric:
       self.estimated_absolute_utility = sensors_utility_metric(self.sensors)
     else:
       self.estimated_absolute_utility = 0
+
+    if recursion_depth > 0 and self.estimated_absolute_utility < recursion_threshold:
+      print('(recursing) ', self)
+    # If the utility is low, then it might still be boosted by recursing.
 
 
 
@@ -104,16 +113,20 @@ class Outcome:
 
 
 class OutcomeGeneratorParams:
-  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep):
+  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep, recursion_depth, recursion_threshold):
     """
     Arguments:
       sensor_vector_dimensionality {float} -- Number of elements in an action vector.
       num_generate {int} -- How many actions to generate, including repeats.
       num_keep {int} -- Of the outcomes generated, keep the top num_keep.
+      recursion_depth {int} -- How many steps forward to look, max.
+      recursion_threshold {float} -- Value between 0 and 1. Above this value, outcome exploration won't recurse.
     """
     self.sensor_vector_dimensionality = sensor_vector_dimensionality
     self.num_generate = num_generate
     self.num_keep = num_keep
+    self.recursion_depth = recursion_depth
+    self.recursion_threshold = recursion_threshold
     
 
 
@@ -137,11 +150,14 @@ class OutcomeGenerator:
 
 
 
-  def generate(self, sensors_prev, actuators):
+  def generate(self, sensors_prev, actuators, recursion_depth=None):
     """Generates a population of plausible sensor state vectors.
     Returns:
     {list} A list of Outcome objects.
     """
+    if recursion_depth is None:
+      recursion_depth = self.params.recursion_depth
+
     population = []
   
     for _ in range(self.params.num_generate):
@@ -174,10 +190,15 @@ class OutcomeGenerator:
     for c in population:
       c.estimate_utility(
         sensors_utility_metric=self.sensors_utility_metric,
-        action_generator=self.action_generator
+        action_generator=self.action_generator,
+        recursion_depth=recursion_depth,
+        recursion_threshold=self.params.recursion_threshold
       )
       c.estimated_weighted_utility =  c.estimated_absolute_utility * c.estimated_probability
 
+    # NOTE: It might be more useful to explore *some* of the utilities of lower-probability
+    # outcomes. After all, a fairly low-probability outcome could have a very high utility,
+    # while all other higher-probability options could have low utility.
 
     return population
 

@@ -30,7 +30,7 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     n_sensors = config['n_sensors']
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, 2, .75)
     self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -41,6 +41,7 @@ class Organism:
     def fn_utility(s): return s[victory_field_idx]
     self.outcome_generator.sensors_utility_metric = fn_utility
     self.outcome_generator.outcome_likelihood_estimator = self.outcome_likelihood_estimator
+    self.outcome_likelihood_estimator.action_generator = self.action_generator
 
     self.action_generator.outcome_generator = self.outcome_generator
     
