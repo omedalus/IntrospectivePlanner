@@ -10,23 +10,27 @@ class Action:
     self.expected_utility = 0
 
 
-  def evaluate(self, sensors, outcome_generator):
+  def evaluate(self, sensors, outcome_generator, recursion_depth=0):
     """Computes the action's expected utility by examining the action's likely outcomes
     and weighing their utilities accordingly.
     Arguments:
       sensors {list} -- The context of sensor states in which this action occurs.
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
+      recursion_depth {int} -- Passed along to outcome generator.
     """
-    self.outcomes = outcome_generator.generate(sensors_prev=sensors, actuators=self.actuators)
+    self.outcomes = outcome_generator.generate(
+      sensors_prev=sensors, 
+      actuators=self.actuators,
+      recursion_depth=recursion_depth
+    )
     
     self.expected_utility = 0
     for oc in self.outcomes:
       self.expected_utility += oc.estimated_weighted_utility
 
-    # TODO: Determine the max raw likelihood of the expected outcomes. If nothing
+    # TODO: Curiosity! Determine the max raw likelihood of the expected outcomes. If nothing
     # is likely, then we don't know what this action will do. That makes it interesting!
     # Give it a high utility.
-    # I.e. this is how you implement curiosity!
 
 
   def fill_random(self, params):
@@ -102,7 +106,7 @@ class ActionGenerator:
     self.outcome_generator = None
 
 
-  def generate(self, sensors):
+  def generate(self, sensors, recursion_depth=0):
     """Creates a population of proposed actions.
     Arguments:
       sensors {list} -- The state of the sensors in which these actions will be taken.
@@ -117,7 +121,11 @@ class ActionGenerator:
         continue
 
       if self.outcome_generator:
-        action.evaluate(sensors, self.outcome_generator)
+        action.evaluate(
+          sensors, 
+          self.outcome_generator, 
+          recursion_depth=recursion_depth
+        )
 
       population.append(action)
 

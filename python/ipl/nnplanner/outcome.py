@@ -46,9 +46,19 @@ class Outcome:
     else:
       self.estimated_absolute_utility = 0
 
-    if recursion_depth > 0 and self.estimated_absolute_utility < recursion_threshold:
-      print('(recursing) ', self)
     # If the utility is low, then it might still be boosted by recursing.
+    if recursion_depth > 0 and self.estimated_absolute_utility < recursion_threshold:
+      try:
+        recursed_actions = action_generator.generate(
+            self.sensors, 
+            recursion_depth=recursion_depth-1
+        )
+
+        recursed_actions_utilities = [a.expected_utility for a in recursed_actions]
+        self.estimated_absolute_utility = max(recursed_actions_utilities)
+
+      except RecursionError:
+        raise ValueError('recursion_depth', "Somebody, and I'm not naming names, but SOMEBODY, forgot to enforce recursion depth limits.")
 
 
 
@@ -113,7 +123,7 @@ class Outcome:
 
 
 class OutcomeGeneratorParams:
-  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep, recursion_depth, recursion_threshold):
+  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep, recursion_threshold):
     """
     Arguments:
       sensor_vector_dimensionality {float} -- Number of elements in an action vector.
@@ -125,7 +135,6 @@ class OutcomeGeneratorParams:
     self.sensor_vector_dimensionality = sensor_vector_dimensionality
     self.num_generate = num_generate
     self.num_keep = num_keep
-    self.recursion_depth = recursion_depth
     self.recursion_threshold = recursion_threshold
     
 
@@ -150,14 +159,11 @@ class OutcomeGenerator:
 
 
 
-  def generate(self, sensors_prev, actuators, recursion_depth=None):
+  def generate(self, sensors_prev, actuators, recursion_depth=0):
     """Generates a population of plausible sensor state vectors.
     Returns:
     {list} A list of Outcome objects.
     """
-    if recursion_depth is None:
-      recursion_depth = self.params.recursion_depth
-
     population = []
   
     for _ in range(self.params.num_generate):

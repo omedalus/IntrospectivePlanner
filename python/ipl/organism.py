@@ -19,6 +19,8 @@ class Organism:
     self.sensors = None
     self.action = None
 
+    self.action_outcome_lookahead = 2
+
     self.verbosity = 0
 
 
@@ -30,7 +32,7 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     n_sensors = config['n_sensors']
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, 2, .75)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .75)
     self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -41,7 +43,7 @@ class Organism:
     def fn_utility(s): return s[victory_field_idx]
     self.outcome_generator.sensors_utility_metric = fn_utility
     self.outcome_generator.outcome_likelihood_estimator = self.outcome_likelihood_estimator
-    self.outcome_likelihood_estimator.action_generator = self.action_generator
+    self.outcome_generator.action_generator = self.action_generator
 
     self.action_generator.outcome_generator = self.outcome_generator
     
@@ -95,7 +97,11 @@ class Organism:
     Arguments:
       force_action {list}: A vector of actuator states that the organism will be forced to perform.
     """
-    actions = self.action_generator.generate(self.sensors)
+    actions = self.action_generator.generate(
+      self.sensors, 
+      recursion_depth=self.action_outcome_lookahead
+    )
+
     if self.verbosity > 0:
       print('ORGANISM: Generated actions (len={})'.format(len(actions)))
       for ac in actions:
