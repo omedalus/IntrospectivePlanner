@@ -10,13 +10,14 @@ class Action:
     self.expected_utility = 0
 
 
-  def evaluate(self, outcome_generator):
+  def evaluate(self, sensors, outcome_generator):
     """Computes the action's expected utility by examining the action's likely outcomes
     and weighing their utilities accordingly.
     Arguments:
+      sensors {list} -- The context of sensor states in which this action occurs.
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
     """
-    self.outcomes = outcome_generator.generate()
+    self.outcomes = outcome_generator.generate(sensors_prev=sensors, actuators=self.actuators)
     
     # TODO: Action's utility is the weighted sum of the utilities of 
     # all of its expected outcomes.
@@ -92,9 +93,10 @@ class ActionGenerator:
     self.outcome_generator = None
 
 
-  def generate(self):
-    """
-    Creates a population of proposed actions.
+  def generate(self, sensors):
+    """Creates a population of proposed actions.
+    Arguments:
+      sensors {list} -- The state of the sensors in which these actions will be taken.
     """
     population = []
     self.selected_action = None
@@ -106,7 +108,7 @@ class ActionGenerator:
         continue
 
       if self.outcome_generator:
-        action.evaluate(self.outcome_generator)
+        action.evaluate(sensors, self.outcome_generator)
 
 
       population.append(action)

@@ -25,7 +25,7 @@ class Outcome:
 
 
 
-  def evaluate(self, sensors_utility_metric=None, outcome_likelihood_estimator=None, with_sensors=None, with_action=None):
+  def evaluate(self, sensors_utility_metric=None, outcome_likelihood_estimator=None, with_sensors=None, with_actuators=None):
     """Compute the likelihood and utility of this Outcome.
     Arguments:
       sensors_utility_metric {function} -- A function that takes a sensors vector and returns a scalar
@@ -39,6 +39,8 @@ class Outcome:
       with_action {list} -- An actuator vector that precedes this outcome. You must provide this
           value if you want to determine this outcome's likelihood.
     """
+    from .experience import Experience
+
     if sensors_utility_metric:
       self.estimated_absolute_utility = sensors_utility_metric(self.sensors)
     else:
@@ -47,14 +49,13 @@ class Outcome:
     if outcome_likelihood_estimator:
       if not with_sensors:
         raise ValueError('with_sensors', 'Must be provided if outcome_likelihood_estimator is set.')
-      if not with_action:
-        raise ValueError('with_action', 'Must be provided if outcome_likelihood_estimator is set.')
-      v = []
-      v += with_sensors
-      v += with_action
-      v += self.sensors
-      y = outcome_likelihood_estimator.predict(v)
-      self.estimated_relative_likelihood = y[0]
+      if not with_actuators:
+        raise ValueError('with_actuators', 'Must be provided if outcome_likelihood_estimator is set.')
+
+      experience_possible = Experience(
+          with_sensors, with_actuators, self.sensors)
+      y = outcome_likelihood_estimator.estimate(experience_possible)
+      self.estimated_relative_likelihood = y
     else:
       self.estimated_relative_likelihood = 0
 
@@ -109,10 +110,11 @@ class OutcomeGenerator:
     """
     self.params = params
     self.sensors_utility_metric = None
+    self.outcome_likelihood_estimator = None
 
 
 
-  def generate(self):
+  def generate(self, sensors_prev, actuators):
     """Generates a population of plausible sensor state vectors.
     Returns:
     {list} A list of Outcome objects.
@@ -125,6 +127,9 @@ class OutcomeGenerator:
         continue
 
       outcome.evaluate(
+        with_sensors=sensors_prev,
+        with_actuators=actuators,
+        outcome_likelihood_estimator=self.outcome_likelihood_estimator,
         sensors_utility_metric=self.sensors_utility_metric
       )
 

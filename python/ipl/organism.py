@@ -40,6 +40,7 @@ class Organism:
     victory_field_idx = config['victory_field_idx']
     def fn_utility(s): return s[victory_field_idx]
     self.outcome_generator.sensors_utility_metric = fn_utility
+    self.outcome_generator.outcome_likelihood_estimator = self.outcome_likelihood_estimator
 
     self.action_generator.outcome_generator = self.outcome_generator
     
@@ -56,7 +57,7 @@ class Organism:
 
 
   def maintenance(self):
-    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo)
+    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo, verbosity=self.verbosity)
 
 
 
@@ -89,12 +90,13 @@ class Organism:
     Arguments:
       force_action {list}: A vector of actuator states that the organism will be forced to perform.
     """
-    self.action_generator.generate()
+    self.action_generator.generate(self.sensors)
     self.action = self.action_generator.selected_action
     if force_action:
       self.action = nnplanner.Action()
       self.action.actuators = force_action
       self.action.evaluate(
+        self.sensors,
         self.outcome_generator
       )
     else:

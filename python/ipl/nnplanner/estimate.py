@@ -3,6 +3,7 @@ import math
 import random
 import sklearn.neural_network  # pylint: disable=E0401
 import sklearn.base  # pylint: disable=E0401
+import sklearn.exceptions  # pylint: disable=E0401
 
 from .action import Action
 from .outcome import Outcome
@@ -105,11 +106,17 @@ class OutcomeLikelihoodEstimator:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
     query_vector = experience_possible.vector()
-    predictions = self.neuralnet.predict([query_vector])
-    return predictions[0]
+    try:
+      predictions = self.neuralnet.predict([query_vector])
+      return predictions[0]
+    except sklearn.exceptions.NotFittedError:
+      # If we don't know any better, we're eager to try anything!
+      return 1
 
 
-  def consolidate_experiences(self, experience_repo):
+
+
+  def consolidate_experiences(self, experience_repo, verbosity=0):
     """Tries to determine which experiences can be removed from the repo, that will have a negligible effect
     on the estimate results.
     Arguments:
@@ -119,7 +126,9 @@ class OutcomeLikelihoodEstimator:
       {list} -- A list of Experience objects that can be removed from the repo with no significant change
           to the output of the estimator.
     """
-    print('Repo size before consolidation: {}'.format(len(experience_repo.experiences)))
+    if verbosity > 0:
+      print('Repo size before consolidation: {}'.format(
+        len(experience_repo.experiences)))
 
     exps = list(experience_repo.experiences)
     random.shuffle(exps)
@@ -141,8 +150,9 @@ class OutcomeLikelihoodEstimator:
       # this experience that it might as well be removed.
       experience_repo.remove(experience)
 
-    print('Repo size after consolidation: {}'.format(
-        len(experience_repo.experiences)))
+    if verbosity > 0:
+      print('Repo size after consolidation: {}'.format(
+          len(experience_repo.experiences)))
 
 
 
