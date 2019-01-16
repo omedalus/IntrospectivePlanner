@@ -15,6 +15,7 @@ class Organism:
     self.action_generator = None
     self.outcome_likelihood_estimator = None
     self.outcome_generator = None
+    self.lookahead_cache = None
   
     self.sensors = None
     self.action = None
@@ -26,6 +27,8 @@ class Organism:
 
 
   def configure(self, config):
+    self.lookahead_cache = nnplanner.LookaheadCache()
+
     n_actuators = config['n_actuators']
     ag_params = nnplanner.ActionGeneratorParams(
         n_actuators, 1, 3, 100, 3)
@@ -44,6 +47,7 @@ class Organism:
     self.outcome_generator.sensors_utility_metric = fn_utility
     self.outcome_generator.outcome_likelihood_estimator = self.outcome_likelihood_estimator
     self.outcome_generator.action_generator = self.action_generator
+    self.outcome_generator.lookahead_cache = self.lookahead_cache
 
     self.action_generator.outcome_generator = self.outcome_generator
     
@@ -56,6 +60,7 @@ class Organism:
   def reset_state(self):
     self.sensors = None
     self.action = None
+    self.lookahead_cache.clear()
 
 
 
@@ -97,6 +102,7 @@ class Organism:
     Arguments:
       force_action {list}: A vector of actuator states that the organism will be forced to perform.
     """
+    # TODO: Tell the action generator about the lookahead cache.
     actions = self.action_generator.generate(
       self.sensors, 
       recursion_depth=self.action_outcome_lookahead

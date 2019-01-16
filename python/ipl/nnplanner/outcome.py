@@ -28,6 +28,7 @@ class Outcome:
   def estimate_utility(self, 
       sensors_utility_metric=None, 
       action_generator=None,
+      lookahead_cache=None,
       recursion_depth=0,
       recursion_threshold=1):
     """Compute the utility of this Outcome.
@@ -37,6 +38,7 @@ class Outcome:
           assumes a utility of 0.
       action_generator {ActionGenerator} -- A generator that can determine what subsequent actions can be
           performed in this outcome.
+      lookahead_cache {LookaheadCache} -- A memoizer of lookahead data, to save recursion.
       recursion_depth {int} -- How deep the current recursion has gotten.
       recursion_threshold {float} -- Value between 0 and 1. Any outcomes with a utility below this level 
           will be attempted to be boosted by recursing.
@@ -46,19 +48,37 @@ class Outcome:
     else:
       self.estimated_absolute_utility = 0
 
-    # If the utility is low, then it might still be boosted by recursing.
-    if recursion_depth > 0 and self.estimated_absolute_utility < recursion_threshold:
-      try:
-        recursed_actions = action_generator.generate(
-            self.sensors, 
-            recursion_depth=recursion_depth-1
-        )
+    # If the utility is low, then it might still be boosted by the utility of states
+    # that come afterwards.
+    if self.estimated_absolute_utility < recursion_threshold:
+      # First check the cache!
+      cache_hit = False
+      if lookahead_cache is not None:
+        lh = lookahead_cache.get(self.sensors)
+        if lh is not None:
+          cache_hit = True
+          self.estimated_absolute_utility = lh.utility
 
-        recursed_actions_utilities = [a.expected_utility for a in recursed_actions]
-        self.estimated_absolute_utility = max(recursed_actions_utilities)
+      # If we missed the cache, but we can still recurse, then we still have a chance of
+      # populating this lookahead. But it's computationally costly.
+      if not cache_hit and recursion_depth > 0:
+        recursed_actions = []
+        try:
+          recursed_actions = action_generator.generate(
+              self.sensors, 
+              recursion_depth=recursion_depth-1
+          )
+        except RecursionError:
+          raise ValueError(
+              'recursion_depth', "Somebody, and I'm not naming names, but SOMEBODY, forgot to enforce recursion depth limits.")
 
-      except RecursionError:
-        raise ValueError('recursion_depth', "Somebody, and I'm not naming names, but SOMEBODY, forgot to enforce recursion depth limits.")
+        if len(recursed_actions):
+          best_action = max(recursed_actions, key=lambda a: a.expected_utility)
+          self.estimated_absolute_utility = best_action.expected_utility
+
+          if lookahead_cache is not None:
+            lookahead_cache.put(self.sensors, best_action.actuators, best_action.expected_utility)
+
 
 
 
@@ -156,6 +176,7 @@ class OutcomeGenerator:
     self.sensors_utility_metric = None
     self.outcome_likelihood_estimator = None
     self.action_generator = None
+    self.lookahead_cache = None
 
 
 
@@ -198,9 +219,10 @@ class OutcomeGenerator:
         sensors_utility_metric=self.sensors_utility_metric,
         action_generator=self.action_generator,
         recursion_depth=recursion_depth,
-        recursion_threshold=self.params.recursion_threshold
+        recursion_threshold=self.params.recursion_threshold,
+        lookahead_cache = self.lookahead_cache
       )
-      c.estimated_weighted_utility =  c.estimated_absolute_utility * c.estimated_probability
+      c.estimated_weighted_utility = c.estimated_absolute_utility * c.estimated_probability
 
     # NOTE: It might be more useful to explore *some* of the utilities of lower-probability
     # outcomes. After all, a fairly low-probability outcome could have a very high utility,
