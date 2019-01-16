@@ -26,7 +26,7 @@ class Organism:
   def configure(self, config):
     n_actuators = config['n_actuators']
     ag_params = nnplanner.ActionGeneratorParams(
-        n_actuators, 1, 3, n_actuators*2)
+        n_actuators, 1, 3, 100, 3)
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     n_sensors = config['n_sensors']
@@ -94,7 +94,12 @@ class Organism:
     Arguments:
       force_action {list}: A vector of actuator states that the organism will be forced to perform.
     """
-    self.action_generator.generate(self.sensors)
+    actions = self.action_generator.generate(self.sensors)
+    if self.verbosity > 0:
+      print('ORGANISM: Generated actions (len={})'.format(len(actions)))
+      for ac in actions:
+        print('\t', ac)
+
     self.action = self.action_generator.selected_action
     if force_action:
       self.action = nnplanner.Action()

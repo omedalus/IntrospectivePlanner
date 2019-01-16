@@ -65,19 +65,21 @@ class Action:
 class ActionGeneratorParams:
   """An object that configures an action generator.
   """
-  def __init__(self, action_vector_dimensionality, activity_level_mean, activity_level_stdev, population_size):
+  def __init__(self, action_vector_dimensionality, activity_level_mean, activity_level_stdev, num_generate, num_keep):
     """Configure an action generator.
 
     Arguments:
       action_vector_dimensionality {integer} -- Number of elements in an action vector.
       activity_level_mean {float} -- The average number of nonzero elements in the vector.
       activity_level_stdev {float} -- The standard deviation of the number of nonzero elements.
-      population_size {int} -- How many actions to generate, including repeats.
+      num_generate {int} -- How many actions to generate, including repeats.
+      num_keep {int} -- Of all actions generated, keep the best num_keep ones.
     """
     self.action_vector_dimensionality = action_vector_dimensionality
     self.activity_level_mean = activity_level_mean
     self.activity_level_stdev = activity_level_stdev
-    self.population_size = population_size
+    self.num_generate = num_generate
+    self.num_keep = num_keep
 
 
 class ActionGenerator:
@@ -107,7 +109,7 @@ class ActionGenerator:
     """
     population = []
     self.selected_action = None
-    for _ in range(self.params.population_size):
+    for _ in range(self.params.num_generate):
       action = Action()
       action.fill_random(self.params)
 
@@ -117,8 +119,10 @@ class ActionGenerator:
       if self.outcome_generator:
         action.evaluate(sensors, self.outcome_generator)
 
-
       population.append(action)
+
+    population.sort(key=lambda a: -a.expected_utility)
+    population = population[:self.params.num_keep]
 
     return population
 
