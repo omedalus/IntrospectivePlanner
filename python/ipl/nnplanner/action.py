@@ -112,7 +112,6 @@ class ActionGenerator:
       sensors {list} -- The state of the sensors in which these actions will be taken.
     """
     population = []
-    self.selected_action = None
     for _ in range(self.params.num_generate):
       action = Action()
       action.fill_random(self.params)

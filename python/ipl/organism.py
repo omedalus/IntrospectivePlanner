@@ -1,6 +1,7 @@
 
 
 import math
+import numpy  # pylint: disable=E0401
 
 import ipl.nnplanner as nnplanner
 
@@ -119,7 +120,6 @@ class Organism:
         for oc in ac.outcomes:
           print('\t\t', oc)
 
-    self.action = self.action_generator.selected_action
     if force_action:
       self.action = nnplanner.Action()
       self.action.actuators = force_action
@@ -128,7 +128,10 @@ class Organism:
         self.outcome_generator
       )
     else:
-      raise NotImplementedError("We're not selecting random actions yet.")
+      choice_ps = [a.expected_utility for a in actions]
+      choice_norm = sum(choice_ps)
+      choice_ps = [p/choice_norm for p in choice_ps]
+      self.action = numpy.random.choice(actions, p=choice_ps)
 
     if self.verbosity > 0:
       print('ORGANISM: Committing to action: {}'.format(self.action))

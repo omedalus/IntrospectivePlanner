@@ -6,21 +6,14 @@ organism.verbosity = 1
 
 organism.configure(game.player_config())
 
-action_program = [
-    [1, 0, 0, 0],
-    [1, 0, 0, 0],
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [1, 0, 0, 0],
-    [1, 0, 0, 0]
-]
-
 organism.reset_state()
-for iturn, pa in enumerate(action_program):
-  print('\nRUNNER: Turn {}'.format(iturn + 1))
+while not game.eof():
+  game.draw()
+
+  print('\nRUNNER: Turn {}'.format(game.turn))
   organism.handle_sensor_input(game.sensors())
 
-  oa = organism.choose_action(pa)
+  oa = organism.choose_action()
   if oa.outcomes and len(oa.outcomes):
     print('Expected outcomes:')
     for outcome in oa.outcomes:
@@ -29,10 +22,11 @@ for iturn, pa in enumerate(action_program):
     print('(Action has no outcomes)')
 
   game.act(oa.actuators)
-  
+
 
 print()
 print('RUNNER: Predefined action sequence complete.')
 organism.handle_sensor_input(game.sensors())
-
 organism.maintenance()
+
+game.draw()

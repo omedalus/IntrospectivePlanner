@@ -129,13 +129,19 @@ class ElMazeGame:
 
   # Submits the actuator vector for evaluation.
   def act(self, actuators):
+    self.turn += 1
+
     cmds = [label for idx,label in enumerate(self.io_vector_labels()['actuators']) if actuators[idx]>0]
+
+    # To make the problem space a little more tractable and less linearly inseparable,
+    # I'll say that 'GO' overrides other commands.
+    if 'GO' in cmds:
+      cmds = ['GO']
+
     if len(cmds) != 1:
       return
 
     cmd = cmds[0]
-
-    self.turn += 1
     self.__last_cmd = cmd
 
     gs = self.state()
@@ -170,4 +176,26 @@ class ElMazeGame:
       CARDINALS_ASCII[self.__orientation]
     )
     return retval
+
+  def draw(self):
+    print()
+    print(self)
+
+    hlen = 1 + self.__victory_position - self.__bend_position
+    ss = []
+    ss.append('  ' + '-'*(hlen-1) + '+')
+    for _ in range(self.__bend_position):
+      ss.append(' ' + ' '*hlen + '|')
+
+    agent_line = max(0, self.__bend_position - self.__position)
+    agent_x = len(ss[agent_line]) - 1
+    if self.__position > self.__bend_position:
+      agent_x -= self.__position - self.__bend_position
+    sl = list(ss[agent_line])
+    sl[agent_x] = CARDINALS_ASCII[self.__orientation]
+    ss[agent_line] = ''.join(sl)
+
+
+    sout = '\n'.join(ss)
+    print(sout)
 
