@@ -20,7 +20,7 @@ class Organism:
     self.sensors = None
     self.action = None
 
-    self.action_outcome_lookahead = 2
+    self.action_outcome_lookahead = 10
 
     self.verbosity = 0
 
@@ -102,7 +102,11 @@ class Organism:
     Arguments:
       force_action {list}: A vector of actuator states that the organism will be forced to perform.
     """
-    # TODO: Tell the action generator about the lookahead cache.
+    # NOTE: If we want the organism to act on an action plan, then we should at least retain
+    # the action tree from its last action decision. Fittingly enough, that can still theoretically
+    # be found in self.action, which we haven't cleared yet.
+    self.lookahead_cache.clear()
+
     actions = self.action_generator.generate(
       self.sensors, 
       recursion_depth=self.action_outcome_lookahead
@@ -112,6 +116,8 @@ class Organism:
       print('ORGANISM: Generated actions (len={})'.format(len(actions)))
       for ac in actions:
         print('\t', ac)
+        for oc in ac.outcomes:
+          print('\t\t', oc)
 
     self.action = self.action_generator.selected_action
     if force_action:
