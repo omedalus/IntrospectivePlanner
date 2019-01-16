@@ -19,8 +19,14 @@ class Action:
     """
     self.outcomes = outcome_generator.generate(sensors_prev=sensors, actuators=self.actuators)
     
-    # TODO: Action's utility is the weighted sum of the utilities of 
-    # all of its expected outcomes.
+    self.expected_utility = 0
+    for oc in self.outcomes:
+      self.expected_utility += oc.estimated_weighted_utility
+
+    # TODO: Determine the max raw likelihood of the expected outcomes. If nothing
+    # is likely, then we don't know what this action will do. That makes it interesting!
+    # Give it a high utility.
+    # I.e. this is how you implement curiosity!
 
 
   def fill_random(self, params):
@@ -51,6 +57,7 @@ class Action:
     retval = 'ACTION: '
     retval += str(self.actuators)
     retval += ' (-> {} outcomes)'.format(len(self.outcomes))
+    retval += ' ${:.02f}'.format(self.expected_utility)
     return retval
 
 
