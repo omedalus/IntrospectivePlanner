@@ -69,6 +69,10 @@ class ExperienceRepo:
     self.experiences = set()
 
 
+  def __len__(self):
+    return len(self.experiences)
+
+
 
   def add(self, sensors_prev, actuators, sensors_observed, sensorses_expected):
     """Add several experiences to the repo.

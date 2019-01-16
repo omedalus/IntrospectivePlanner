@@ -30,7 +30,7 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(ag_params)
 
     n_sensors = config['n_sensors']
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, n_sensors*2)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 20, .25, 10)
     self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -57,7 +57,7 @@ class Organism:
 
 
   def maintenance(self):
-    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo, verbosity=self.verbosity)
+    self.outcome_likelihood_estimator.consolidate_experiences(self.experience_repo, 1, verbosity=self.verbosity)
 
 
 

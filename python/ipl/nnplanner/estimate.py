@@ -17,7 +17,9 @@ class OutcomeLikelihoodEstimatorParams:
     self.n_sensors = n_sensors
     self.n_actuators = n_actuators
 
-    self.forget_delta_threshold = kwargs.get('forget_delta_threshold') or 0.05
+    self.forget_delta_threshold = kwargs.get('forget_delta_threshold') 
+    if self.forget_delta_threshold is None:
+      self.forget_delta_threshold = 0.005
     #self.n_registers = 0
 
 
@@ -34,12 +36,12 @@ class OutcomeLikelihoodEstimator:
     self.params = params
 
     ninputs = 2 * params.n_sensors + params.n_actuators
-    nhidden = 2 * ninputs + int(math.sqrt(ninputs)) + 1
+    nhidden1 = 2 * ninputs + int(math.sqrt(ninputs)) + 1
+    nhidden2 = nhidden1
 
     # TODO: Play around with number and size of hidden layers.
     self.neuralnet = sklearn.neural_network.MLPRegressor(
-        hidden_layer_sizes=(nhidden),
-        activation='logistic',
+        hidden_layer_sizes=(nhidden1, nhidden2),
         solver='lbfgs'
     )
 
@@ -107,8 +109,8 @@ class OutcomeLikelihoodEstimator:
     """
     query_vector = experience_possible.vector()
     try:
-      predictions = self.neuralnet.predict([query_vector])
-      return predictions[0]
+      prediction = self.neuralnet.predict([query_vector])[0]
+      return prediction
     except sklearn.exceptions.NotFittedError:
       # If we don't know any better, we're eager to try anything!
       return 1
@@ -116,23 +118,28 @@ class OutcomeLikelihoodEstimator:
 
 
 
-  def consolidate_experiences(self, experience_repo, verbosity=0):
+  def consolidate_experiences(self, experience_repo, max_experience_repo_size, verbosity=0):
     """Tries to determine which experiences can be removed from the repo, that will have a negligible effect
     on the estimate results.
     Arguments:
       experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
           This method has a side-effect of removing items from the repo.
+      max_experience_repo_size {int} -- The biggest we want to let the experience repo get. We'll
+          stop consolidating if it's smaller than this.
     Returns:
       {list} -- A list of Experience objects that can be removed from the repo with no significant change
           to the output of the estimator.
     """
     if verbosity > 0:
       print('Repo size before consolidation: {}'.format(
-        len(experience_repo.experiences)))
+        len(experience_repo)))
 
     exps = list(experience_repo.experiences)
     random.shuffle(exps)
     for experience in exps:
+      if len(experience_repo) <= max_experience_repo_size:
+        break
+
       est_before = self.estimate(experience)
 
       tvecsX, tvecsY = experience_repo.training_data(without=experience)
@@ -152,7 +159,7 @@ class OutcomeLikelihoodEstimator:
 
     if verbosity > 0:
       print('Repo size after consolidation: {}'.format(
-          len(experience_repo.experiences)))
+          len(experience_repo)))
 
 
 

@@ -70,9 +70,9 @@ class Outcome:
     retval = 'OUTCOME: '
     retval += str(self.sensors)
     retval += ' ({}% ${:.2f} = ${:.2f})'.format( 
-        int(100*self.estimated_probability), 
-        self.estimated_absolute_utility,
-        self.estimated_weighted_utility
+        int(100*(self.estimated_probability or 0)), 
+        self.estimated_absolute_utility or 0,
+        self.estimated_weighted_utility or 0
         )
     return retval
 
@@ -85,13 +85,19 @@ class Outcome:
 
 
 class OutcomeGeneratorParams:
-  def __init__(self, sensor_vector_dimensionality, population_size):
+  def __init__(self, sensor_vector_dimensionality, population_size, keep_rate, max_iterations):
     """
-    @param sensor_vector_dimensionality: Number of elements in an action vector.
-    @param population_size: How many actions to generate, including repeats.
+    Arguments:
+      sensor_vector_dimensionality {float} -- Number of elements in an action vector.
+      population_size {int} -- How many actions to generate, including repeats.
+      keep_rate {float} -- Value between 0 and 1 representing the fraction of likeliest individuals
+          to keep in every iteration.
+      max_iterations {int} -- Max number of iterations to run the generate method.
     """
     self.sensor_vector_dimensionality = sensor_vector_dimensionality
     self.population_size = population_size
+    self.keep_rate = keep_rate
+    self.max_iterations = max_iterations
     
 
 
@@ -114,18 +120,24 @@ class OutcomeGenerator:
 
 
 
-  def generate(self, sensors_prev, actuators):
+  def generate(self, sensors_prev, actuators, population=None, iteration=0):
     """Generates a population of plausible sensor state vectors.
     Returns:
     {list} A list of Outcome objects.
     """
-    population = []
+    if population is None:
+      population = []
+  
+    if iteration == 0 and len(population)>0:
+      raise ValueError('Where did this pop come from? {}'.format(len(population)))
+
     for _ in range(self.params.population_size):
       outcome = Outcome()
       outcome.fill_random(self.params)
+
       if outcome in population:
         continue
-
+  
       outcome.evaluate(
         with_sensors=sensors_prev,
         with_actuators=actuators,
@@ -135,7 +147,15 @@ class OutcomeGenerator:
 
       population.append(outcome)
 
+    population.sort(key=lambda c: -c.estimated_relative_likelihood)
+    num_to_keep = int(len(population) * self.params.keep_rate)
+    population = population[:num_to_keep]
+
     # Normalize the likelihoods into probabilities.
+    min_likelihood = min([c.estimated_relative_likelihood for c in population])
+    for c in population:
+      c.estimated_relative_likelihood -= min_likelihood
+
     total_likelihood = sum([c.estimated_relative_likelihood for c in population])
     for c in population:
       if not total_likelihood:
@@ -145,7 +165,11 @@ class OutcomeGenerator:
     for c in population:
       c.estimated_weighted_utility =  c.estimated_absolute_utility * c.estimated_probability
 
-    return population
+
+    if iteration >= self.params.max_iterations or len(population) >= self.params.population_size:
+      return population
+
+    return self.generate(sensors_prev, actuators, population, iteration+1)
 
 
 
