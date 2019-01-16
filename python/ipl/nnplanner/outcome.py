@@ -25,13 +25,31 @@ class Outcome:
 
 
 
-  def evaluate(self, sensors_utility_metric=None, outcome_likelihood_estimator=None, with_sensors=None, with_actuators=None):
-    """Compute the likelihood and utility of this Outcome.
+  def estimate_utility(self, 
+      sensors_utility_metric=None, 
+      action_generator=None):
+    """Compute the utility of this Outcome.
     Arguments:
       sensors_utility_metric {function} -- A function that takes a sensors vector and returns a scalar
           in the range [0,1] to describe the utility of that sensor state. If not given,
           assumes a utility of 0.
-      outcome_likelihood_estimator {MLPRegressor} -- An object that can estimate the likelihood
+      action_generator {ActionGenerator} -- A generator that can determine what subsequent actions can be
+          performed in this outcome.
+    """
+    if sensors_utility_metric:
+      self.estimated_absolute_utility = sensors_utility_metric(self.sensors)
+    else:
+      self.estimated_absolute_utility = 0
+
+
+
+  def estimate_likelihood(self, 
+      outcome_likelihood_estimator=None, 
+      with_sensors=None, 
+      with_actuators=None):
+    """Compute the likelihood of this Outcome.
+    Arguments:
+      outcome_likelihood_estimator {OutcomeLikelihoodEstimator} -- An object that can estimate the likelihood
           of this outcome arising from the specified action in the context of the specified
           sensor state. If not given, assumes a likelihood of 0.
       with_sensors {list} -- A sensor vector that precedes this outcome. You must provide this
@@ -41,11 +59,7 @@ class Outcome:
     """
     from .experience import Experience
 
-    if sensors_utility_metric:
-      self.estimated_absolute_utility = sensors_utility_metric(self.sensors)
-    else:
-      self.estimated_absolute_utility = 0
-    
+    # Estimate probability
     if outcome_likelihood_estimator:
       if not with_sensors:
         raise ValueError('with_sensors', 'Must be provided if outcome_likelihood_estimator is set.')
@@ -61,6 +75,8 @@ class Outcome:
       self.estimated_relative_likelihood = y
     else:
       self.estimated_relative_likelihood = 0
+
+
 
 
 
@@ -117,6 +133,7 @@ class OutcomeGenerator:
     self.params = params
     self.sensors_utility_metric = None
     self.outcome_likelihood_estimator = None
+    self.action_generator = None
 
 
 
@@ -134,11 +151,10 @@ class OutcomeGenerator:
       if outcome in population:
         continue
   
-      outcome.evaluate(
+      outcome.estimate_likelihood(
         with_sensors=sensors_prev,
         with_actuators=actuators,
         outcome_likelihood_estimator=self.outcome_likelihood_estimator,
-        sensors_utility_metric=self.sensors_utility_metric
       )
 
       population.append(outcome)
@@ -153,8 +169,15 @@ class OutcomeGenerator:
         c.estimated_probability = 1.0 / len(population)
       else:
         c.estimated_probability = c.estimated_relative_likelihood / total_likelihood
+
+    # Determine the utility of every member of the surviving population.
     for c in population:
+      c.estimate_utility(
+        sensors_utility_metric=self.sensors_utility_metric,
+        action_generator=self.action_generator
+      )
       c.estimated_weighted_utility =  c.estimated_absolute_utility * c.estimated_probability
+
 
     return population
 

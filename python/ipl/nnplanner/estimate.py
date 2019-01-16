@@ -108,12 +108,15 @@ class OutcomeLikelihoodEstimator:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
     query_vector = experience_possible.vector()
+    prediction = 1
     try:
       prediction = self.neuralnet.predict([query_vector])[0]
-      return prediction
     except sklearn.exceptions.NotFittedError:
       # If we don't know any better, we're eager to try anything!
-      return 1
+      prediction = 1
+    prediction = max(prediction, 0)
+    prediction = min(prediction, 1)
+    return prediction
 
 
 
