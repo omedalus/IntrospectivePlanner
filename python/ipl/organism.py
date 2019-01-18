@@ -61,7 +61,7 @@ class Organism:
       self.action_outcome_lookahead = 0
       self.action_generator.outcome_generator = None
       self.outcome_likelihood_estimator = None
-      self.experience_repo = None
+      # self.experience_repo = None
 
     self.reset_state()
 
@@ -96,15 +96,14 @@ class Organism:
         self.experience_repo.add(
           self.sensors,
           self.action.actuators,
-          sensors,
-          [o.sensors for o in self.action.outcomes]
+          sensors
         )
 
       if self.outcome_likelihood_estimator is not None:
         self.outcome_likelihood_estimator.learn(self.experience_repo)
 
       if self.verbosity > 0 and self.experience_repo is not None:
-        print('ORGANISM: Experience repo size: {}'.format(len(self.experience_repo.experiences)))
+        print('ORGANISM: Experience repo size: {}'.format(len(self.experience_repo)))
     
     self.sensors = sensors
     self.action = None
