@@ -135,8 +135,8 @@ class ElMazeGame:
 
     # To make the problem space a little more tractable and less linearly inseparable,
     # I'll say that 'GO' overrides other commands.
-    if 'GO' in cmds:
-      cmds = ['GO']
+    #if 'GO' in cmds:
+    #  cmds = ['GO']
 
     if len(cmds) != 1:
       return

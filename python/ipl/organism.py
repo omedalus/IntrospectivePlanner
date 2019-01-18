@@ -16,14 +16,17 @@ class Organism:
     self.action_generator = None
     self.outcome_likelihood_estimator = None
     self.outcome_generator = None
+
+    self.experience_repo = None
     self.lookahead_cache = None
-  
+
     self.sensors = None
     self.action = None
 
-    self.action_outcome_lookahead = 10
+    self.action_outcome_lookahead = 4
 
     self.verbosity = 0
+    self.randomtest = False
 
 
 
@@ -54,6 +57,12 @@ class Organism:
     
     self.experience_repo = nnplanner.ExperienceRepo()
 
+    if self.randomtest:
+      self.action_outcome_lookahead = 0
+      self.action_generator.outcome_generator = None
+      self.outcome_likelihood_estimator = None
+      self.experience_repo = None
+
     self.reset_state()
 
 
@@ -66,11 +75,12 @@ class Organism:
 
 
   def maintenance(self):
-    max_memory_before_consolidation = 1000000
-    self.outcome_likelihood_estimator.consolidate_experiences(
-      self.experience_repo, 
-      max_memory_before_consolidation, 
-      verbosity=self.verbosity)
+    if self.outcome_likelihood_estimator is not None:
+      max_memory_before_consolidation = 1000000
+      self.outcome_likelihood_estimator.consolidate_experiences(
+        self.experience_repo, 
+        max_memory_before_consolidation, 
+        verbosity=self.verbosity)
 
 
 
@@ -82,16 +92,18 @@ class Organism:
       # Learn from the last turn's experience. This not only involves learning that
       # the thing we observed happened, but it also involves learning all the things
       # we thought might happen that didn't.
-      self.experience_repo.add(
-        self.sensors,
-        self.action.actuators,
-        sensors,
-        [o.sensors for o in self.action.outcomes]
-      )
+      if self.experience_repo is not None:
+        self.experience_repo.add(
+          self.sensors,
+          self.action.actuators,
+          sensors,
+          [o.sensors for o in self.action.outcomes]
+        )
 
-      self.outcome_likelihood_estimator.learn(self.experience_repo)
+      if self.outcome_likelihood_estimator is not None:
+        self.outcome_likelihood_estimator.learn(self.experience_repo)
 
-      if self.verbosity > 0:
+      if self.verbosity > 0 and self.experience_repo is not None:
         print('ORGANISM: Experience repo size: {}'.format(len(self.experience_repo.experiences)))
     
     self.sensors = sensors
@@ -130,7 +142,10 @@ class Organism:
     else:
       choice_ps = [a.expected_utility for a in actions]
       choice_norm = sum(choice_ps)
-      choice_ps = [p/choice_norm for p in choice_ps]
+      if not choice_norm:
+        choice_ps = [1/len(choice_ps)] * len(choice_ps) 
+      else:
+        choice_ps = [p/choice_norm for p in choice_ps]
       self.action = numpy.random.choice(actions, p=choice_ps)
 
     if self.verbosity > 0:
