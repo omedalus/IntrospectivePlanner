@@ -5,7 +5,7 @@ game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
 organism.verbosity = 1
 
-organism.randomtest = True
+# organism.randomtest = True
 organism.configure(game.player_config())
 
 if not organism.randomtest:
@@ -17,6 +17,8 @@ if not organism.randomtest:
 
 
 organism.reset_state()
+game.set_position(4, 'WEST')
+
 while not game.eof():
   game.draw()
 

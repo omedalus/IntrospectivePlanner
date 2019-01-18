@@ -36,13 +36,11 @@ class OutcomeLikelihoodEstimator:
     self.params = params
 
     ninputs = 2 * params.n_sensors + params.n_actuators
-    nhidden1 = 2 * ninputs + int(math.sqrt(ninputs)) + 1
-    nhidden2 = nhidden1
+    nhidden1 = 4 * ninputs**2
 
     # TODO: Play around with number and size of hidden layers.
     self.neuralnet = sklearn.neural_network.MLPRegressor(
-        hidden_layer_sizes=(nhidden1, nhidden2),
-        solver='lbfgs'
+        hidden_layer_sizes=(nhidden1),
     )
 
 

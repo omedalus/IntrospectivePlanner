@@ -102,6 +102,9 @@ class ElMazeGame:
     retval = [1 if symbol in self.state() else 0 for symbol in self.io_vector_labels()['sensors']]
     return retval
 
+  def set_position(self, position, orientation):
+    self.__position = position
+    self.__orientation = orientation
 
 
 

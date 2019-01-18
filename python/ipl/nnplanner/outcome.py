@@ -205,6 +205,13 @@ class OutcomeGenerator:
     population.sort(key=lambda c: -c.estimated_relative_likelihood)
     population = population[:self.params.num_keep]
 
+    # Don't keep any pop members that are less than half the likelihood of the top guy.
+    best_likelihood = population[0].estimated_relative_likelihood
+    for ihalf in range(1, len(population)):
+      if population[ihalf].estimated_relative_likelihood < best_likelihood / 2:
+        population = population[:ihalf]
+        break
+
     # Normalize the likelihoods into probabilities.
     total_likelihood = sum([c.estimated_relative_likelihood for c in population])
     for c in population:

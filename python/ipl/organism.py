@@ -23,7 +23,7 @@ class Organism:
     self.sensors = None
     self.action = None
 
-    self.action_outcome_lookahead = 4
+    self.action_outcome_lookahead = 0
 
     self.verbosity = 0
     self.randomtest = False
