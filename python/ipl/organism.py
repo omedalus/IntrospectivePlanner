@@ -25,6 +25,9 @@ class Organism:
 
     self.action_outcome_lookahead = 0
 
+    self.num_registers = 1
+    self.registers = []
+
     self.verbosity = 0
     self.randomtest = False
 
@@ -34,7 +37,7 @@ class Organism:
     self.lookahead_cache = nnplanner.LookaheadCache()
     self.experience_repo = nnplanner.ExperienceRepo()
 
-    n_actuators = config['n_actuators']
+    n_actuators = config['n_actuators'] + self.num_registers
     ag_params = nnplanner.ActionGeneratorParams(
         n_actuators, 1, 3, 100, 3)
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
@@ -42,7 +45,7 @@ class Organism:
     victory_field_idx = config['victory_field_idx']
     def fn_utility(s): return s[victory_field_idx]
 
-    n_sensors = config['n_sensors']
+    n_sensors = config['n_sensors'] + self.num_registers
     cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .10, .95)
     self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
@@ -65,6 +68,8 @@ class Organism:
     self.sensors = None
     self.action = None
     self.lookahead_cache.clear()
+    self.registers = [0] * self.num_registers
+
 
 
 
@@ -82,6 +87,8 @@ class Organism:
 
 
   def handle_sensor_input(self, sensors):
+    sensors = sensors + self.registers
+
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}'.format(sensors))
 
@@ -115,7 +122,6 @@ class Organism:
     # the action tree from its last action decision. Fittingly enough, that can still theoretically
     # be found in self.action, which we haven't cleared yet.
     self.lookahead_cache.clear()
-    print('Choosing action. recursion_depth=', self.action_outcome_lookahead)
 
     actions = self.action_generator.generate(
       self.sensors, 
@@ -145,8 +151,10 @@ class Organism:
         choice_ps = [p/choice_norm for p in choice_ps]
       self.action = numpy.random.choice(actions, p=choice_ps)
 
+    self.registers = self.action.actuators[-self.num_registers:]
+
     if self.verbosity > 0:
-      print('ORGANISM: Committing to action: {}'.format(self.action))
+      print('ORGANISM: Committing to action: {} (registers: {})'.format(self.action, self.registers))
 
     return self.action
 

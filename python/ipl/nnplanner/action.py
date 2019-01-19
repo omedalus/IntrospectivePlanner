@@ -18,7 +18,6 @@ class Action:
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
       recursion_depth {int} -- Passed along to outcome generator.
     """
-    print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
     self.outcomes = outcome_generator.generate(
       sensors_prev=sensors, 
       actuators=self.actuators,
@@ -112,7 +111,6 @@ class ActionGenerator:
     Arguments:
       sensors {list} -- The state of the sensors in which these actions will be taken.
     """
-    print('recursion_depth=', recursion_depth, ' Generating actions for ', sensors)
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_actions(sensors)
@@ -125,13 +123,6 @@ class ActionGenerator:
         continue
 
       population.append(action)
-
-    # DEBUGGING OVERRIDE
-    if sensors[0]==1:
-      population = [Action([1,0,0,0])]
-    else:
-      population = [Action([0,0,0,1])]
-
 
     for action in population:
       if self.organism and self.organism.outcome_generator:

@@ -5,7 +5,7 @@ game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
 organism.verbosity = 1
 
-organism.randomtest = False
+organism.randomtest = True
 organism.configure(game.player_config())
 
 try:
@@ -18,7 +18,7 @@ except FileNotFoundError:
 
 organism.reset_state()
 organism.action_outcome_lookahead = 2
-game.set_position(3, 'NORTH')
+#game.set_position(3, 'NORTH')
 
 while not game.eof():
   game.draw()
@@ -32,12 +32,10 @@ while not game.eof():
     for outcome in oa.outcomes:
       print('\t{}'.format(outcome))
   else:
-    print('(Action has no outcomes)')
+    print('(Action has no foreseen outcomes)')
 
   game.act(oa.actuators)
 
-  #DEBUG
-  break
 
 
 print()
