@@ -98,12 +98,12 @@ class ActionGenerator:
   The generator uses a genetic algorithm to evaluate
   actions for viability and desirability.
   """
-  def __init__(self, params):
+  def __init__(self, organism, params):
     """
     @param params: An ActionGeneratorParams object.
     """
+    self.organism = organism
     self.params = params
-    self.outcome_generator = None
 
 
   def generate(self, sensors, recursion_depth=0):
@@ -119,10 +119,10 @@ class ActionGenerator:
       if action in population:
         continue
 
-      if self.outcome_generator:
+      if self.organism and self.organism.outcome_generator:
         action.evaluate(
           sensors, 
-          self.outcome_generator, 
+          self.organism.outcome_generator, 
           recursion_depth=recursion_depth
         )
 

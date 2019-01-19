@@ -24,13 +24,13 @@ class OutcomeLikelihoodEstimator:
   a current state and a subsequent state, and tries to estimate the
   likelihood of seeing that subsequent state given the current one."""
 
-  def __init__(self, params):
+  def __init__(self, organism, params):
     """Create the estimator.
     Arguments:
       params {OutcomeLikelihoodEstimatorParams} -- Configuration info.
     """
+    self.organism = organism
     self.params = params
-    self.experience_repo = None
 
 
 
@@ -92,7 +92,7 @@ class OutcomeLikelihoodEstimator:
     Returns:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
-    if not self.experience_repo:
+    if self.organism is None or self.organism.experience_repo is None:
       raise ValueError('Experience repo must be specified.')
 
 

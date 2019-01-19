@@ -104,7 +104,7 @@ class Outcome:
         raise ValueError('with_actuators', 'Must be provided if outcome_likelihood_estimator is set.')
 
       y = outcome_likelihood_estimator.estimate(with_sensors, with_actuators, self.sensors)
-      self.estimated_relative_likelihood = y
+      self.estimated_relative_likelihood = y or 0
     else:
       self.estimated_relative_likelihood = 0
 
@@ -160,16 +160,14 @@ class OutcomeGenerator:
   """An object that generates random sensor state vectors.
   """
 
-  def __init__(self, params):
+  def __init__(self, organism, params, sensors_utility_metric):
     """An object that generates random sensor state vectors.
     Arguments:
       params {OutcomeGeneratorParams} -- Configuration parameters.
     """
+    self.organism = organism
     self.params = params
-    self.sensors_utility_metric = None
-    self.outcome_likelihood_estimator = None
-    self.action_generator = None
-    self.lookahead_cache = None
+    self.sensors_utility_metric = sensors_utility_metric
 
 
 
@@ -190,7 +188,7 @@ class OutcomeGenerator:
       outcome.estimate_likelihood(
         with_sensors=sensors_prev,
         with_actuators=actuators,
-        outcome_likelihood_estimator=self.outcome_likelihood_estimator,
+        outcome_likelihood_estimator=self.organism.outcome_likelihood_estimator,
       )
 
       population.append(outcome)
@@ -217,10 +215,10 @@ class OutcomeGenerator:
     for c in population:
       c.estimate_utility(
         sensors_utility_metric=self.sensors_utility_metric,
-        action_generator=self.action_generator,
+        action_generator=self.organism.action_generator,
         recursion_depth=recursion_depth,
         recursion_threshold=self.params.recursion_threshold,
-        lookahead_cache = self.lookahead_cache
+        lookahead_cache = self.organism.lookahead_cache
       )
       c.estimated_weighted_utility = c.estimated_absolute_utility * c.estimated_probability
 

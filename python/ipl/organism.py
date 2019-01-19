@@ -32,21 +32,23 @@ class Organism:
 
   def configure(self, config):
     self.lookahead_cache = nnplanner.LookaheadCache()
+    self.experience_repo = nnplanner.ExperienceRepo()
 
     n_actuators = config['n_actuators']
     ag_params = nnplanner.ActionGeneratorParams(
         n_actuators, 1, 3, 100, 3)
-    self.action_generator = nnplanner.ActionGenerator(ag_params)
+    self.action_generator = nnplanner.ActionGenerator(self, ag_params)
+
+    victory_field_idx = config['victory_field_idx']
+    def fn_utility(s): return s[victory_field_idx]
 
     n_sensors = config['n_sensors']
     cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .75)
-    self.outcome_generator = nnplanner.OutcomeGenerator(cg_params)
+    self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
         n_sensors, n_actuators)
-    self.outcome_likelihood_estimator = nnplanner.OutcomeLikelihoodEstimator(ole_params)
-
-    self.experience_repo = nnplanner.ExperienceRepo()
+    self.outcome_likelihood_estimator = nnplanner.OutcomeLikelihoodEstimator(self, ole_params)
 
     if self.randomtest:
       self.action_outcome_lookahead = 0
@@ -54,16 +56,6 @@ class Organism:
       self.outcome_likelihood_estimator = None
       # self.experience_repo = None
 
-    victory_field_idx = config['victory_field_idx']
-    def fn_utility(s): return s[victory_field_idx]
-    self.outcome_generator.sensors_utility_metric = fn_utility
-    self.outcome_generator.outcome_likelihood_estimator = self.outcome_likelihood_estimator
-    self.outcome_generator.action_generator = self.action_generator
-    self.outcome_generator.lookahead_cache = self.lookahead_cache
-
-    self.action_generator.outcome_generator = self.outcome_generator
-    
-    self.outcome_likelihood_estimator.experience_repo = self.experience_repo
 
     self.reset_state()
 
