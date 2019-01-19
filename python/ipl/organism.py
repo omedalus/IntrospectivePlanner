@@ -36,7 +36,7 @@ class Organism:
 
     n_actuators = config['n_actuators']
     ag_params = nnplanner.ActionGeneratorParams(
-        n_actuators, 1, 3, 100, 3)
+        n_actuators, 1, 3, 100, 10)
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
 
     victory_field_idx = config['victory_field_idx']
