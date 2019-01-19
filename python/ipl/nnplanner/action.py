@@ -18,7 +18,7 @@ class Action:
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
       recursion_depth {int} -- Passed along to outcome generator.
     """
-    print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
+    #print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
     self.outcomes = outcome_generator.generate(
       sensors_prev=sensors, 
       actuators=self.actuators,

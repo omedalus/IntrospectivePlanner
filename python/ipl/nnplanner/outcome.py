@@ -177,7 +177,7 @@ class OutcomeGenerator:
     Returns:
     {list} A list of Outcome objects.
     """
-    print('recursion_depth=', recursion_depth, ' Generating outcomes for ', sensors_prev, actuators)
+    #print('recursion_depth=', recursion_depth, ' Generating outcomes for ', sensors_prev, actuators)
 
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
@@ -202,7 +202,7 @@ class OutcomeGenerator:
     population = [c for c in population if c.probability > self.params.prob_threshold]
     population = population[:self.params.num_keep]
 
-    print(population)
+    #print(population)
 
     # Determine the utility of every member of the surviving population.
     for c in population:

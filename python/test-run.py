@@ -19,7 +19,6 @@ except FileNotFoundError:
 
 organism.reset_state()
 organism.action_outcome_lookahead = 3
-game.set_position(3, 'NORTH')
 
 while not game.eof():
   game.draw()
@@ -36,7 +35,6 @@ while not game.eof():
     print('(Action has no foreseen outcomes)')
 
   game.act(oa.actuators)
-  break
 
 
 print()

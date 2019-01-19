@@ -99,10 +99,14 @@ class Organism:
       # the thing we observed happened, but it also involves learning all the things
       # we thought might happen that didn't.
       if self.experience_repo is not None:
+        magnitude = 1
+        if sensors[4] == 1:
+          magnitude = 20
         self.experience_repo.add(
           self.sensors,
           self.action.actuators,
-          sensors
+          sensors,
+          magnitude=magnitude
         )
 
       if self.outcome_likelihood_estimator is not None:

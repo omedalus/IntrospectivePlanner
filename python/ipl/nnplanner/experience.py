@@ -46,7 +46,7 @@ class ExperienceRepo:
 
 
 
-  def add(self, sensors_prev, actuators, sensors_observed):
+  def add(self, sensors_prev, actuators, sensors_observed, magnitude=1):
     """Add several experiences to the repo.
     Arguments:
       sensors_prev {list} -- Previous sensor state.
@@ -69,10 +69,10 @@ class ExperienceRepo:
       action_record.outcomes[outcome_key] = SensorsRecord(sensors_observed)
     outcome_record = action_record.outcomes[outcome_key]
 
-    self.__total_record_count += 1
-    situation_record.count += 1
-    action_record.count += 1
-    outcome_record.count += 1
+    self.__total_record_count += magnitude
+    situation_record.count += magnitude
+    action_record.count += magnitude
+    outcome_record.count += magnitude
 
 
 
