@@ -114,6 +114,20 @@ class OutcomeLikelihoodEstimator:
     return outcomes
 
 
+  def get_known_actions(self, sensors_prev):
+    if self.organism is None or self.organism.experience_repo is None:
+      raise ValueError('Experience repo must be specified.')
+    actuatorses = self.organism.experience_repo.lookup_actions(sensors_prev)
+
+    actions = []
+    for actuators in actuatorses:
+      a = Action()
+      a.actuators = actuators
+      actions.append(a)
+      
+    return actions
+
+
   def consolidate_experiences(self, max_experience_repo_size, verbosity=0):
     """Tries to determine which experiences can be removed from the repo, that will have a negligible effect
     on the estimate results.

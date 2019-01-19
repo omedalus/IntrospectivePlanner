@@ -112,6 +112,15 @@ class ActionGenerator:
       sensors {list} -- The state of the sensors in which these actions will be taken.
     """
     population = []
+    if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
+      population += self.organism.outcome_likelihood_estimator.get_known_actions(sensors)
+      for action in population:
+        action.evaluate(
+          sensors, 
+          self.organism.outcome_generator, 
+          recursion_depth=recursion_depth          
+        )
+
     for _ in range(self.params.num_generate):
       action = Action()
       action.fill_random(self.params)
@@ -128,6 +137,7 @@ class ActionGenerator:
 
       population.append(action)
 
+    numpy.random.shuffle(population)
     population.sort(key=lambda a: -a.expected_utility)
     population = population[:self.params.num_keep]
 
