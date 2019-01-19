@@ -94,8 +94,22 @@ class OutcomeLikelihoodEstimator:
     """
     if self.organism is None or self.organism.experience_repo is None:
       raise ValueError('Experience repo must be specified.')
+    return self.organism.experience_repo.get_outcome_probability(sensors_prev, action, sensors_next)
 
 
+  def get_known_outcomes(self, sensors_prev, action, prob_threshold=0):
+    if self.organism is None or self.organism.experience_repo is None:
+      raise ValueError('Experience repo must be specified.')
+    sensorsprobs = self.organism.experience_repo.lookup_outcomes(sensors_prev, action, prob_threshold=0)
+    for sensorsprob in sensorsprobs:
+      sensors = sensorsprobs[0]
+      prob = sensorsprobs[1]
+      c = Outcome()
+      c.sensors = sensors
+      c.estimated_relative_likelihood = prob
+      outcomes.append(c)
+
+    return outcomes
 
 
   def consolidate_experiences(self, max_experience_repo_size, verbosity=0):

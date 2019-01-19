@@ -69,6 +69,9 @@ class Organism:
 
 
   def maintenance(self):
+    return
+
+    # Consolidation crap.
     if self.outcome_likelihood_estimator is not None:
       max_memory_before_consolidation = 1000000
       self.outcome_likelihood_estimator.consolidate_experiences(

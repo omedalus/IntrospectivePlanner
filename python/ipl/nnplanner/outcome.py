@@ -204,12 +204,9 @@ class OutcomeGenerator:
         break
 
     # Normalize the likelihoods into probabilities.
-    total_likelihood = sum([c.estimated_relative_likelihood for c in population])
     for c in population:
-      if not total_likelihood:
-        c.estimated_probability = 1.0 / len(population)
-      else:
-        c.estimated_probability = c.estimated_relative_likelihood / total_likelihood
+      c.estimated_probability = c.estimated_relative_likelihood
+      
 
     # Determine the utility of every member of the surviving population.
     for c in population:
