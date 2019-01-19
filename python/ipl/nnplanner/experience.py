@@ -1,63 +1,5 @@
 
 
-class Experience:
-  """A class that records a single instance of a sensor state, an action
-  taken in that sensor state, an outcome, and whether or not that outcome
-  actually happened.
-  """
-
-
-  def __init__(self, sensors_prev, actuators, sensors_next):
-    """Tell the estimator that a certain combination of sensors, actions, etc.,
-    led to an observed outcome, and not any of the other outcomes that the estimator
-    might have previously believed had high likelihoods.
-    Arguments:
-      sensors_prev {list} -- The previous sensor vector, in which context the action was taken.
-      actuators {list} -- The action that was taken in the context of the sensors_prev sensor state.
-      sensors_next {list} -- The sensor state that was subsequently expected and/or observed.
-    """
-    self.sensors_prev = sensors_prev
-    self.actuators = actuators
-    self.sensors_next = sensors_next
-
-
-  def __repr__(self):
-    retval = '{}=>{}'.format(self.reporecord_key(), self.outcome_key())
-    return retval
-
-
-  def reporecord_key(self):
-    """A key comprised of the sensor state and action."""
-    retval = ''
-    retval += ''.join([str(x) for x in self.sensors_prev])
-    retval += '-'
-    retval += ''.join([str(x) for x in self.actuators])
-    return retval
-
-
-  def outcome_key(self):
-    """A key comprised of the sensor state and action."""
-    retval = ''
-    retval += ''.join([str(x) for x in self.sensors_next])
-    return retval
-
-
-
-  def vector(self):
-    """The full experience described as a vector for use as input to the estimator.
-    Returns:
-      {list} -- A concatenated vector of all of this experience's components.
-    """
-    retval = []
-    retval += self.sensors_prev
-    retval += self.actuators
-    retval += self.sensors_next
-    return retval
-
-
-
-
-
 class SensorsRecord:
   def __init__(self, sensors):
     self.sensors = sensors
@@ -132,6 +74,91 @@ class ExperienceRepo:
     action_record.count += 1
     outcome_record.count += 1
 
+
+
+  def get_outcome_probability(self, sensors_prev, actuators, sensors_next):
+    """Gets the probability, based on direct experience, of the exact outcome occurring
+    in the given situation given the described action.
+    Arguments:
+      sensors_prev {list} -- Sensor state.
+      actuators {list} -- Action to take.
+      sensors_next {list} -- Sensor state after action.
+    Returns:
+      {float} -- Probability of seeing the outcome result, or None if the action has
+          never been attempted in this situation before.
+    """
+    situation_key = SensorsRecord.compute_key(sensors_prev)
+    action_key = ActuatorsRecord.compute_key(actuators)
+    outcome_key = SensorsRecord.compute_key(sensors_next)
+
+    situation_record = self.situations.get(situation_key)
+    if not situation_record:
+      return None
+
+    action_record = situation_record.responses.get(action_key)
+    if not action_record:
+      return None
+    
+    outcome_record = self.situations.get(situation_key)
+    if not outcome_record:
+      return 0
+
+    return outcome_record.count / action_record.count
+
+
+
+  def lookup_outcomes(self, sensors, actuators, prob_threshold=0):
+    """Queries for all outcomes historically observed when applying given action in given situation.
+    Arguments:
+      sensors {list} -- Sensor state.
+      actuators {list} -- Action to take.
+      prob_threshold {float} -- Don't return outcomes whose probability is below this.
+    Returns:
+      {list( (list, float) )} -- Sorted list of subsequent sensor states, with probabilities.
+    """
+    situation_key = SensorsRecord.compute_key(sensors)
+    action_key = ActuatorsRecord.compute_key(actuators)
+
+    situation_record = self.situations.get(situation_key)
+    if not situation_record:
+      return []
+
+    action_record = situation_record.responses.get(action_key)
+    if not action_record:
+      return []
+    
+    retval = []
+    for outcome_record in action_record.outcomes.values():
+      sensors_next = outcome_record.sensors
+      prob = outcome_record.count / action_record.count
+      if prob >= prob_threshold:
+        retval.append( (sensors_next, prob) )
+
+    retval.sort(key = lambda x: -x[1])
+    return retval
+
+
+  def lookup_actions(self, sensors):
+    """Queries for all actions that had been attempted before in this situation.
+    Arguments:
+      sensors {list} -- Sensor state.
+    Returns:
+      {list(list)} -- List of action vectors.
+    """
+    situation_key = SensorsRecord.compute_key(sensors)
+    situation_record = self.situations.get(situation_key)
+    if not situation_record:
+      return []
+
+    retval = []
+    for action_record in situation_record.responses.values():
+      retval.append(action_record.actuators)
+
+    return retval
+    
+    
+    
+    
 
 
 

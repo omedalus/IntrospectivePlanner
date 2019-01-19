@@ -96,8 +96,6 @@ class Outcome:
       with_action {list} -- An actuator vector that precedes this outcome. You must provide this
           value if you want to determine this outcome's likelihood.
     """
-    from .experience import Experience
-
     # Estimate probability
     if outcome_likelihood_estimator:
       if not with_sensors:
@@ -105,12 +103,7 @@ class Outcome:
       if not with_actuators:
         raise ValueError('with_actuators', 'Must be provided if outcome_likelihood_estimator is set.')
 
-      experience_possible = Experience(
-          with_sensors, with_actuators, self.sensors)
-      y = outcome_likelihood_estimator.estimate(experience_possible)
-      y = max(y, 0.0)
-      y = min(y, 1.0)      
-
+      y = outcome_likelihood_estimator.estimate(with_sensors, with_actuators, self.sensors)
       self.estimated_relative_likelihood = y
     else:
       self.estimated_relative_likelihood = 0

@@ -5,7 +5,7 @@ game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
 organism.verbosity = 1
 
-organism.randomtest = True
+organism.randomtest = False
 organism.configure(game.player_config())
 
 try:

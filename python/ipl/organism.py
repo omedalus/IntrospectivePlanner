@@ -46,6 +46,14 @@ class Organism:
         n_sensors, n_actuators)
     self.outcome_likelihood_estimator = nnplanner.OutcomeLikelihoodEstimator(ole_params)
 
+    self.experience_repo = nnplanner.ExperienceRepo()
+
+    if self.randomtest:
+      self.action_outcome_lookahead = 0
+      self.action_generator.outcome_generator = None
+      self.outcome_likelihood_estimator = None
+      # self.experience_repo = None
+
     victory_field_idx = config['victory_field_idx']
     def fn_utility(s): return s[victory_field_idx]
     self.outcome_generator.sensors_utility_metric = fn_utility
@@ -55,13 +63,7 @@ class Organism:
 
     self.action_generator.outcome_generator = self.outcome_generator
     
-    self.experience_repo = nnplanner.ExperienceRepo()
-
-    if self.randomtest:
-      self.action_outcome_lookahead = 0
-      self.action_generator.outcome_generator = None
-      self.outcome_likelihood_estimator = None
-      # self.experience_repo = None
+    self.outcome_likelihood_estimator.experience_repo = self.experience_repo
 
     self.reset_state()
 

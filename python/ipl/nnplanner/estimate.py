@@ -1,13 +1,9 @@
 
 import math
 import random
-import sklearn.neural_network  # pylint: disable=E0401
-import sklearn.base  # pylint: disable=E0401
-import sklearn.exceptions  # pylint: disable=E0401
 
 from .action import Action
 from .outcome import Outcome
-from .experience import Experience
 
 
 class OutcomeLikelihoodEstimatorParams:
@@ -34,14 +30,8 @@ class OutcomeLikelihoodEstimator:
       params {OutcomeLikelihoodEstimatorParams} -- Configuration info.
     """
     self.params = params
+    self.experience_repo = None
 
-    ninputs = 2 * params.n_sensors + params.n_actuators
-    nhidden1 = 4 * ninputs**2
-
-    # TODO: Play around with number and size of hidden layers.
-    self.neuralnet = sklearn.neural_network.MLPRegressor(
-        hidden_layer_sizes=(nhidden1),
-    )
 
 
 
@@ -92,71 +82,38 @@ class OutcomeLikelihoodEstimator:
     Arguments:
       experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
     """
-    tvecsX, tvecsY = experience_repo.training_data()
-    self.neuralnet.fit(tvecsX, tvecsY)
+    pass
 
 
 
-  def estimate(self, experience_possible):
+  def estimate(self, sensors_prev, action, sensors_next):
     """Compute the likelihood that, after performing action action in the context of sensor state
     sensors_prev, that the next sensor state encountered will be sensors_next.
-    Arguments:
-      experience_possible {Experience} -- An experience that the organism might have.
     Returns:
       {float} -- The estimated relative likelihood of seeing the outcome.
     """
-    query_vector = experience_possible.vector()
-    prediction = 1
-    try:
-      prediction = self.neuralnet.predict([query_vector])[0]
-    except sklearn.exceptions.NotFittedError:
-      # If we don't know any better, we're eager to try anything!
-      prediction = 1
-    prediction = max(prediction, 0)
-    prediction = min(prediction, 1)
-    return prediction
+    if not self.experience_repo:
+      raise ValueError('Experience repo must be specified.')
 
 
 
 
-  def consolidate_experiences(self, experience_repo, max_experience_repo_size, verbosity=0):
+  def consolidate_experiences(self, max_experience_repo_size, verbosity=0):
     """Tries to determine which experiences can be removed from the repo, that will have a negligible effect
     on the estimate results.
     Arguments:
-      experience_repo {ExperienceRepo} -- Repository of all experiences the organism has ever had.
-          This method has a side-effect of removing items from the repo.
       max_experience_repo_size {int} -- The biggest we want to let the experience repo get. We'll
           stop consolidating if it's smaller than this.
     Returns:
       {list} -- A list of Experience objects that can be removed from the repo with no significant change
           to the output of the estimator.
     """
+    raise NotImplementedError('Not implemented anymore.')
     if verbosity > 0:
       print('Repo size before consolidation: {}'.format(
         len(experience_repo)))
 
-    exps = list(experience_repo.experiences)
-    random.shuffle(exps)
-    for experience in exps:
-      if len(experience_repo) <= max_experience_repo_size:
-        break
-
-      est_before = self.estimate(experience)
-
-      tvecsX, tvecsY = experience_repo.training_data(without=experience)
-
-      nn_without = sklearn.base.clone(self.neuralnet)
-      nn_without.fit(tvecsX, tvecsY)
-
-      est_after = nn_without.predict([experience.vector()])[0]
-
-      delta = abs(est_after - est_before)
-      if delta >= self.params.forget_delta_threshold:
-        continue
-
-      # The NN *without* this experience is similar enough to the NN *with* 
-      # this experience that it might as well be removed.
-      experience_repo.remove(experience)
+    pass
 
     if verbosity > 0:
       print('Repo size after consolidation: {}'.format(
