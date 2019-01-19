@@ -39,14 +39,14 @@ class Organism:
 
     n_actuators = config['n_actuators'] + self.num_registers
     ag_params = nnplanner.ActionGeneratorParams(
-        n_actuators, 1, 3, 100, 3)
+        n_actuators, 1, 3, 100, 10)
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
 
     victory_field_idx = config['victory_field_idx']
     def fn_utility(s): return s[victory_field_idx]
 
     n_sensors = config['n_sensors'] + self.num_registers
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .10, .95)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 10, .10, .95)
     self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -67,8 +67,10 @@ class Organism:
   def reset_state(self):
     self.sensors = None
     self.action = None
-    self.lookahead_cache.clear()
     self.registers = [0] * self.num_registers
+    if self.lookahead_cache is not None:
+      self.lookahead_cache.clear()
+
 
 
 
@@ -121,7 +123,8 @@ class Organism:
     # NOTE: If we want the organism to act on an action plan, then we should at least retain
     # the action tree from its last action decision. Fittingly enough, that can still theoretically
     # be found in self.action, which we haven't cleared yet.
-    self.lookahead_cache.clear()
+    if self.lookahead_cache is not None:
+      self.lookahead_cache.clear()
 
     actions = self.action_generator.generate(
       self.sensors, 
@@ -135,6 +138,7 @@ class Organism:
         for oc in ac.outcomes:
           print('\t\t', oc)
 
+    just_pick_best_action = True
     if force_action:
       self.action = nnplanner.Action()
       self.action.actuators = force_action
@@ -142,6 +146,8 @@ class Organism:
         self.sensors,
         self.outcome_generator
       )
+    elif just_pick_best_action:
+      self.action = actions[0]
     else:
       choice_ps = [a.expected_utility for a in actions]
       choice_norm = sum(choice_ps)

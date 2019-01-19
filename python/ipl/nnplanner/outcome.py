@@ -80,7 +80,6 @@ class Outcome:
 
 
 
-
   def estimate_likelihood(self, 
       outcome_likelihood_estimator=None, 
       with_sensors=None, 
@@ -178,6 +177,8 @@ class OutcomeGenerator:
     Returns:
     {list} A list of Outcome objects.
     """
+    print('recursion_depth=', recursion_depth, ' Generating outcomes for ', sensors_prev, actuators)
+
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_outcomes(sensors_prev, actuators)
@@ -200,7 +201,9 @@ class OutcomeGenerator:
     population.sort(key=lambda c: -c.probability)
     population = [c for c in population if c.probability > self.params.prob_threshold]
     population = population[:self.params.num_keep]
-      
+
+    print(population)
+
     # Determine the utility of every member of the surviving population.
     for c in population:
       c.estimate_utility(

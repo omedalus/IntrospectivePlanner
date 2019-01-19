@@ -5,8 +5,9 @@ game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
 organism.verbosity = 1
 
-organism.randomtest = True
+organism.randomtest = False
 organism.configure(game.player_config())
+#organism.outcome_likelihood_estimator = None
 
 try:
   exprepo = pickle.load(open("organism-exprepo.p", "rb"))
@@ -17,8 +18,8 @@ except FileNotFoundError:
 
 
 organism.reset_state()
-organism.action_outcome_lookahead = 2
-#game.set_position(3, 'NORTH')
+organism.action_outcome_lookahead = 3
+game.set_position(3, 'NORTH')
 
 while not game.eof():
   game.draw()
@@ -35,7 +36,7 @@ while not game.eof():
     print('(Action has no foreseen outcomes)')
 
   game.act(oa.actuators)
-
+  break
 
 
 print()

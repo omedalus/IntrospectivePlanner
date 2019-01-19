@@ -18,15 +18,21 @@ class Action:
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
       recursion_depth {int} -- Passed along to outcome generator.
     """
+    print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
     self.outcomes = outcome_generator.generate(
       sensors_prev=sensors, 
       actuators=self.actuators,
       recursion_depth=recursion_depth
-    )
-    
+    )    
+
     self.expected_utility = 0
     for oc in self.outcomes:
       self.expected_utility += oc.estimated_weighted_utility
+
+    # Scale back the utility in order to taper the utility of longer action plans.
+    # Every level of recursion reduces the utility a little bit.
+    self.expected_utility *= .9
+
 
     # TODO: Curiosity! Determine the max raw likelihood of the expected outcomes. If nothing
     # is likely, then we don't know what this action will do. That makes it interesting!
@@ -123,6 +129,17 @@ class ActionGenerator:
         continue
 
       population.append(action)
+
+
+    force_turn_left = False
+    if force_turn_left:
+      population = [Action([0,0,0,0,0])]
+      if sensors[0] == 1:
+        population[0].actuators[0] = 1
+      else:
+        population[0].actuators[1] = 1
+        
+
 
     for action in population:
       if self.organism and self.organism.outcome_generator:
