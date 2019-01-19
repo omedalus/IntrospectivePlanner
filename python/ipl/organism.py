@@ -43,7 +43,7 @@ class Organism:
     def fn_utility(s): return s[victory_field_idx]
 
     n_sensors = config['n_sensors']
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .75)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 3, .10, .95)
     self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(

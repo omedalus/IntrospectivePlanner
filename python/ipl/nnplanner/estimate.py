@@ -101,12 +101,14 @@ class OutcomeLikelihoodEstimator:
     if self.organism is None or self.organism.experience_repo is None:
       raise ValueError('Experience repo must be specified.')
     sensorsprobs = self.organism.experience_repo.lookup_outcomes(sensors_prev, action, prob_threshold=0)
+
+    outcomes = []
     for sensorsprob in sensorsprobs:
-      sensors = sensorsprobs[0]
-      prob = sensorsprobs[1]
+      sensors = sensorsprob[0]
+      prob = sensorsprob[1]
       c = Outcome()
       c.sensors = sensors
-      c.estimated_relative_likelihood = prob
+      c.probability = prob
       outcomes.append(c)
 
     return outcomes

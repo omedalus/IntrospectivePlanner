@@ -99,7 +99,7 @@ class ExperienceRepo:
     if not action_record:
       return None
     
-    outcome_record = self.situations.get(situation_key)
+    outcome_record = action_record.outcomes.get(outcome_key)
     if not outcome_record:
       return 0
 

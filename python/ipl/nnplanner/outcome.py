@@ -6,10 +6,9 @@ class Outcome:
   def __init__(self):
     self.sensors = []
 
-    self.estimated_relative_likelihood = None
-    self.estimated_absolute_utility = 0
+    self.probability = None
 
-    self.estimated_probability = None
+    self.estimated_absolute_utility = 0
     self.estimated_weighted_utility = 0
 
     self.responses = []
@@ -104,9 +103,9 @@ class Outcome:
         raise ValueError('with_actuators', 'Must be provided if outcome_likelihood_estimator is set.')
 
       y = outcome_likelihood_estimator.estimate(with_sensors, with_actuators, self.sensors)
-      self.estimated_relative_likelihood = y or 0
+      self.probability = y or 0
     else:
-      self.estimated_relative_likelihood = 0
+      self.probability = 0
 
 
 
@@ -121,7 +120,7 @@ class Outcome:
     retval = 'OUTCOME: '
     retval += str(self.sensors)
     retval += ' ({:2d}% ${:.2f} = ${:.2f})'.format( 
-        int(100*(self.estimated_probability or 0)), 
+        int(100*(self.probability or 0)), 
         self.estimated_absolute_utility or 0,
         self.estimated_weighted_utility or 0
         )
@@ -136,18 +135,21 @@ class Outcome:
 
 
 class OutcomeGeneratorParams:
-  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep, recursion_threshold):
+  def __init__(self, sensor_vector_dimensionality, num_generate, num_keep, prob_threshold, recursion_threshold):
     """
     Arguments:
       sensor_vector_dimensionality {float} -- Number of elements in an action vector.
       num_generate {int} -- How many actions to generate, including repeats.
       num_keep {int} -- Of the outcomes generated, keep the top num_keep.
       recursion_depth {int} -- How many steps forward to look, max.
-      recursion_threshold {float} -- Value between 0 and 1. Above this value, outcome exploration won't recurse.
+      prob_threshold {float} -- Value between 0 and 1. Below this probability value, outcomes aren't even considered.
+      recursion_threshold {float} -- Value between 0 and 1. Above this utility value, outcome exploration won't recurse;
+          it's considered a categorical win.
     """
     self.sensor_vector_dimensionality = sensor_vector_dimensionality
     self.num_generate = num_generate
     self.num_keep = num_keep
+    self.prob_threshold = prob_threshold
     self.recursion_threshold = recursion_threshold
     
 
@@ -177,6 +179,8 @@ class OutcomeGenerator:
     {list} A list of Outcome objects.
     """
     population = []
+    if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
+      population += self.organism.outcome_likelihood_estimator.get_known_outcomes(sensors_prev, actuators)
   
     for _ in range(self.params.num_generate):
       outcome = Outcome()
@@ -193,21 +197,10 @@ class OutcomeGenerator:
 
       population.append(outcome)
 
-    population.sort(key=lambda c: -c.estimated_relative_likelihood)
+    population.sort(key=lambda c: -c.probability)
+    population = [c for c in population if c.probability > self.params.prob_threshold]
     population = population[:self.params.num_keep]
-
-    # Don't keep any pop members that are less than half the likelihood of the top guy.
-    best_likelihood = population[0].estimated_relative_likelihood
-    for ihalf in range(1, len(population)):
-      if population[ihalf].estimated_relative_likelihood < best_likelihood / 2:
-        population = population[:ihalf]
-        break
-
-    # Normalize the likelihoods into probabilities.
-    for c in population:
-      c.estimated_probability = c.estimated_relative_likelihood
       
-
     # Determine the utility of every member of the surviving population.
     for c in population:
       c.estimate_utility(
@@ -217,7 +210,7 @@ class OutcomeGenerator:
         recursion_threshold=self.params.recursion_threshold,
         lookahead_cache = self.organism.lookahead_cache
       )
-      c.estimated_weighted_utility = c.estimated_absolute_utility * c.estimated_probability
+      c.estimated_weighted_utility = c.estimated_absolute_utility * c.probability
 
     # NOTE: It might be more useful to explore *some* of the utilities of lower-probability
     # outcomes. After all, a fairly low-probability outcome could have a very high utility,
