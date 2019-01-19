@@ -4,8 +4,8 @@ class Action:
   """
   An action and possible outcomes.
   """
-  def __init__(self):
-    self.actuators = []
+  def __init__(self, actuators=None):
+    self.actuators = actuators or []
     self.outcomes = []
     self.expected_utility = 0
 
@@ -18,6 +18,7 @@ class Action:
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
       recursion_depth {int} -- Passed along to outcome generator.
     """
+    print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
     self.outcomes = outcome_generator.generate(
       sensors_prev=sensors, 
       actuators=self.actuators,
@@ -111,15 +112,10 @@ class ActionGenerator:
     Arguments:
       sensors {list} -- The state of the sensors in which these actions will be taken.
     """
+    print('recursion_depth=', recursion_depth, ' Generating actions for ', sensors)
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_actions(sensors)
-      for action in population:
-        action.evaluate(
-          sensors, 
-          self.organism.outcome_generator, 
-          recursion_depth=recursion_depth          
-        )
 
     for _ in range(self.params.num_generate):
       action = Action()
@@ -128,14 +124,22 @@ class ActionGenerator:
       if action in population:
         continue
 
+      population.append(action)
+
+    # DEBUGGING OVERRIDE
+    if sensors[0]==1:
+      population = [Action([1,0,0,0])]
+    else:
+      population = [Action([0,0,0,1])]
+
+
+    for action in population:
       if self.organism and self.organism.outcome_generator:
         action.evaluate(
           sensors, 
           self.organism.outcome_generator, 
           recursion_depth=recursion_depth
         )
-
-      population.append(action)
 
     numpy.random.shuffle(population)
     population.sort(key=lambda a: -a.expected_utility)

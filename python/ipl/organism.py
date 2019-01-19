@@ -36,7 +36,7 @@ class Organism:
 
     n_actuators = config['n_actuators']
     ag_params = nnplanner.ActionGeneratorParams(
-        n_actuators, 1, 3, 100, 10)
+        n_actuators, 1, 3, 100, 3)
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
 
     victory_field_idx = config['victory_field_idx']
@@ -115,6 +115,7 @@ class Organism:
     # the action tree from its last action decision. Fittingly enough, that can still theoretically
     # be found in self.action, which we haven't cleared yet.
     self.lookahead_cache.clear()
+    print('Choosing action. recursion_depth=', self.action_outcome_lookahead)
 
     actions = self.action_generator.generate(
       self.sensors, 

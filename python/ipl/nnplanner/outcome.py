@@ -46,6 +46,7 @@ class Outcome:
       self.estimated_absolute_utility = sensors_utility_metric(self.sensors)
     else:
       self.estimated_absolute_utility = 0
+    print('recursion_depth=', recursion_depth, ' Estimating utility of ', self, ': ', self.estimated_absolute_utility)
 
     # If the utility is low, then it might still be boosted by the utility of states
     # that come afterwards.
@@ -57,10 +58,12 @@ class Outcome:
         if lh is not None:
           cache_hit = True
           self.estimated_absolute_utility = lh.utility
+          print('Cache hit! Utility: ', self.estimated_absolute_utility)
 
       # If we missed the cache, but we can still recurse, then we still have a chance of
       # populating this lookahead. But it's computationally costly.
       if not cache_hit and recursion_depth > 0:
+        print('Cache miss, but recursion still viable at ', recursion_depth)
         recursed_actions = []
         try:
           recursed_actions = action_generator.generate(
@@ -178,9 +181,12 @@ class OutcomeGenerator:
     Returns:
     {list} A list of Outcome objects.
     """
+    print('recursion_depth=', recursion_depth, ' Generating outcomes for ', sensors_prev, actuators)
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_outcomes(sensors_prev, actuators)
+      print('Found known outcomes: ', len(population))
+      print(population)
   
     for _ in range(self.params.num_generate):
       outcome = Outcome()
