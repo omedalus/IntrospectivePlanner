@@ -23,7 +23,7 @@ class Organism:
     self.sensors = None
     self.action = None
 
-    self.action_outcome_lookahead = 0
+    self.action_outcome_lookahead = 5
 
     self.num_registers = 1
     self.registers = []

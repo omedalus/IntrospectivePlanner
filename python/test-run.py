@@ -7,7 +7,6 @@ organism.verbosity = 1
 
 organism.randomtest = False
 organism.configure(game.player_config())
-#organism.outcome_likelihood_estimator = None
 
 try:
   exprepo = pickle.load(open("organism-exprepo.p", "rb"))
@@ -18,7 +17,6 @@ except FileNotFoundError:
 
 
 organism.reset_state()
-organism.action_outcome_lookahead = 5
 
 while not game.eof():
   game.draw()
