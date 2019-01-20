@@ -1,10 +1,13 @@
 
 
 class Lookahead:
-  def __init__(self, sensors, best_actuators, utility):
+  def __init__(self, sensors, best_actuators, utility, recursion_depth):
     self.sensors = sensors
     self.best_actuators = best_actuators
     self.utility = utility
+    self.recursion_depth = recursion_depth
+    # NOTE: recursion_depth is actually how much depth this path was explored to!
+    # Higher means it was explored deeper.
 
   def key(self):
     return Lookahead.sensors_key(self.sensors)
@@ -26,12 +29,18 @@ class LookaheadCache:
   def clear(self):
     self.cache = {}
 
-  def get(self, sensors):
+  def get(self, sensors, recursion_depth):
     lhkey = Lookahead.sensors_key(sensors)
-    return self.cache.get(lhkey)
+    lh = self.cache.get(lhkey)
+    if lh is None or recursion_depth > lh.recursion_depth:
+      # If we're going to explore this path to a depth deeper than what we already did,
+      # then let's go ahead and do so.
+      return None
+    return lh
 
-  def put(self, sensors, actuators, utility):
-    lh = Lookahead(sensors, actuators, utility)
+
+  def put(self, sensors, actuators, utility, recursion_depth):
+    lh = Lookahead(sensors, actuators, utility, recursion_depth)
     lhkey = lh.key()
     self.cache[lhkey] = lh
 

@@ -39,14 +39,14 @@ class Organism:
 
     n_actuators = config['n_actuators'] + self.num_registers
     ag_params = nnplanner.ActionGeneratorParams(
-        n_actuators, 1, 3, 100, 10)
+        n_actuators, 1, 3, 3, 10)
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
 
     victory_field_idx = config['victory_field_idx']
     def fn_utility(s): return s[victory_field_idx]
 
     n_sensors = config['n_sensors'] + self.num_registers
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 100, 10, .10, .95)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 3, 10, .10, .95)
     self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -101,7 +101,7 @@ class Organism:
       if self.experience_repo is not None:
         magnitude = 1
         if sensors[4] == 1:
-          magnitude = 20
+          magnitude = 100
         self.experience_repo.add(
           self.sensors,
           self.action.actuators,

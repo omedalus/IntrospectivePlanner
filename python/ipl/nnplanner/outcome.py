@@ -53,7 +53,7 @@ class Outcome:
       # First check the cache!
       cache_hit = False
       if lookahead_cache is not None:
-        lh = lookahead_cache.get(self.sensors)
+        lh = lookahead_cache.get(self.sensors, recursion_depth)
         if lh is not None:
           cache_hit = True
           self.estimated_absolute_utility = lh.utility
@@ -76,7 +76,7 @@ class Outcome:
           self.estimated_absolute_utility = best_action.expected_utility
 
           if lookahead_cache is not None:
-            lookahead_cache.put(self.sensors, best_action.actuators, best_action.expected_utility)
+            lookahead_cache.put(self.sensors, best_action.actuators, best_action.expected_utility, recursion_depth)
 
 
 

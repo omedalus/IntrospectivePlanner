@@ -18,7 +18,7 @@ except FileNotFoundError:
 
 
 organism.reset_state()
-organism.action_outcome_lookahead = 3
+organism.action_outcome_lookahead = 5
 
 while not game.eof():
   game.draw()
