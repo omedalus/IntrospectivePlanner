@@ -100,8 +100,8 @@ class Organism:
       # we thought might happen that didn't.
       if self.experience_repo is not None:
         magnitude = 1
-        if sensors[4] == 1:
-          magnitude = 100
+        #if sensors[4] == 1:
+        #  magnitude = 100
         self.experience_repo.add(
           self.sensors,
           self.action.actuators,

@@ -57,6 +57,10 @@ class ExperienceRepo:
     action_key = ActuatorsRecord.compute_key(actuators)
     outcome_key = SensorsRecord.compute_key(sensors_observed)
 
+    new_situation = False
+    new_action = False
+    new_outcome = False
+
     if situation_key not in self.situations:
       self.situations[situation_key] = SensorsRecord(sensors_prev)  
     situation_record = self.situations[situation_key]
@@ -68,6 +72,13 @@ class ExperienceRepo:
     if outcome_key not in action_record.outcomes:
       action_record.outcomes[outcome_key] = SensorsRecord(sensors_observed)
     outcome_record = action_record.outcomes[outcome_key]
+
+    # Make the salience of new experiences proportional to prior experience magnitudes.
+
+    # If it's an old action in an old situation but produces a new outcome,
+    # that's extremely interesting!
+    if not new_situation and not new_action and new_outcome:
+      magnitude += len(self)
 
     self.__total_record_count += magnitude
     situation_record.count += magnitude

@@ -28,8 +28,10 @@ for itrial in range(100):
       if game.turn % 100 == 0:
         print('\tTurns elapsed: {:4d}\tExperience repo size: {:8d}'.format(game.turn, len(organism.experience_repo) ))
 
-      game.draw()
-    
+
+    organism.handle_sensor_input(game.sensors())
+    organism.maintenance()
+
     print('\tCompleted in {:4d} turns.'.format(game.turn))
     print()
 
