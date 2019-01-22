@@ -33,10 +33,23 @@ class Action:
     # Every level of recursion reduces the utility a little bit.
     self.expected_utility *= .9
 
+    # Curiosity!
+    #    
+    # Curiosity is somewhat complicated. It should be based on a utility function that
+    # permits the organism to explore in times of either very low or very high stress,
+    # but in moderate-stress situations the organism should be less willing to take risks.
+    # (In low-stress situations the organism takes risks because it can afford to,
+    # and in high-stress desperate situations the organism takes risks because it *has* to.)
+    # https://www.mindtools.com/pages/article/inverted-u.htm
+    # TODO: This means we have to pass organism state into this function.
+    # For now, we'll set the organism to more or less permanent exploration mode.
 
-    # TODO: Curiosity! Determine the max raw likelihood of the expected outcomes. If nothing
-    # is likely, then we don't know what this action will do. That makes it interesting!
-    # Give it a high utility.
+    if len(self.outcomes) == 0:
+      # Actions that have no foreseeable outcomes should be at least somewhat enticing.
+      self.expected_utility = .1
+
+
+
 
 
   def fill_random(self, params):

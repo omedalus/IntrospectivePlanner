@@ -26,7 +26,12 @@ for itrial in range(100):
       game.act(oa.actuators)
 
       if game.turn % 100 == 0:
-        print('\tTurns elapsed: {:4d}\tExperience repo size: {:8d}'.format(game.turn, len(organism.experience_repo) ))
+        print('\tTrial {:4d}\tRun: {:4d}\t Turns elapsed: {:4d}\tExperience repo size: {:8d}'.format(
+          itrial+1,
+          irun+1,
+          game.turn, 
+          len(organism.experience_repo) 
+        ))
 
 
     organism.handle_sensor_input(game.sensors())

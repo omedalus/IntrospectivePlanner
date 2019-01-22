@@ -1,4 +1,6 @@
 
+import math
+
 
 class SensorsRecord:
   def __init__(self, sensors):
@@ -73,17 +75,30 @@ class ExperienceRepo:
       action_record.outcomes[outcome_key] = SensorsRecord(sensors_observed)
     outcome_record = action_record.outcomes[outcome_key]
 
-    # Make the salience of new experiences proportional to prior experience magnitudes.
-
-    # If it's an old action in an old situation but produces a new outcome,
-    # that's extremely interesting!
-    if not new_situation and not new_action and new_outcome:
-      magnitude += len(self)
-
     self.__total_record_count += magnitude
     situation_record.count += magnitude
     action_record.count += magnitude
     outcome_record.count += magnitude
+
+    # Boost the salience of unlikely but actually-encountered events.
+    # This is, strictly speaking, the introduction of a cognitive fallacy,
+    # but it may be useful for the learning paradigm.
+    # If we're adding an outcome that is currently the unlikeliest outcome
+    # of this action, then boost its likelihood so that it is perceived to
+    # be the next-unlikeliest.
+    # NOTE: Alternatively, we can add a "curiosity flag", to indicate that
+    # we suspect that it *may* happen, and we should try it more in order to
+    # confirm.
+    outcome_counts = sorted([oc.count for oc in action_record.outcomes.values()])
+    lowest_count = outcome_counts[0]
+    if outcome_record.count == lowest_count:
+      outcome_counts_without_lowest = [c for c in outcome_counts if c!=lowest_count]
+      if len(outcome_counts_without_lowest) > 0:
+        next_lowest_count = outcome_counts_without_lowest[0]
+        magboost = next_lowest_count - outcome_record.count + 1
+        situation_record.count += magboost
+        action_record.count += magboost
+        outcome_record.count += magboost
 
 
 
@@ -95,8 +110,9 @@ class ExperienceRepo:
       actuators {list} -- Action to take.
       sensors_next {list} -- Sensor state after action.
     Returns:
-      {float} -- Probability of seeing the outcome result, or None if the action has
-          never been attempted in this situation before.
+      {float, float} -- Probability and 95% confidence interval of the probability of
+          seeing this outcome if this action is attempted in this situation.
+          If the action has never been attempted before, p = 0 +/- 1
     """
     situation_key = SensorsRecord.compute_key(sensors_prev)
     action_key = ActuatorsRecord.compute_key(actuators)
@@ -104,17 +120,31 @@ class ExperienceRepo:
 
     situation_record = self.situations.get(situation_key)
     if not situation_record:
-      return None
+      return (0, 1)
 
     action_record = situation_record.responses.get(action_key)
     if not action_record:
-      return None
+      return (0, 1)
     
     outcome_record = action_record.outcomes.get(outcome_key)
     if not outcome_record:
-      return 0
+      return (0, 1)
 
-    return outcome_record.count / action_record.count
+    p = outcome_record.count / action_record.count
+
+    # To compute confidence interval, start with the tautology that
+    # the outcome either happens or it doesn't. Treat it like a
+    # Bernouli trial.
+    # https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
+    # https://sigmazone.com/binomial-confidence-intervals/
+    z95 = 1.96
+    n = action_record.count
+    ci = 2 * z95 * math.sqrt ( p*(1.0-p) / n )
+
+    # Normalize the CI range to [0,1]
+    ci = min(ci, 1)
+
+    return p, ci
 
 
 
@@ -125,7 +155,8 @@ class ExperienceRepo:
       actuators {list} -- Action to take.
       prob_threshold {float} -- Don't return outcomes whose probability is below this.
     Returns:
-      {list( (list, float) )} -- Sorted list of subsequent sensor states, with probabilities.
+      {list( (list, float, float) )} -- Sorted list of subsequent sensor states, with 
+          probabilities and confidence intervals.
     """
     situation_key = SensorsRecord.compute_key(sensors)
     action_key = ActuatorsRecord.compute_key(actuators)
@@ -141,9 +172,14 @@ class ExperienceRepo:
     retval = []
     for outcome_record in action_record.outcomes.values():
       sensors_next = outcome_record.sensors
+      # This isn't super computationally efficient, but it helps to consolidate
+      # the confidence interval calculation code.
+      # TODO: Factor out the confidence interval calculation code.
+      prob, ci = self.get_outcome_probability(sensors, actuators, sensors_next)
+
       prob = outcome_record.count / action_record.count
       if prob >= prob_threshold:
-        retval.append( (sensors_next, prob) )
+        retval.append( (sensors_next, prob, ci) )
 
     retval.sort(key = lambda x: -x[1])
     return retval

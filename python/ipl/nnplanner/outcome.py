@@ -7,6 +7,7 @@ class Outcome:
     self.sensors = []
 
     self.probability = None
+    self.probability_95ci = None
 
     self.estimated_absolute_utility = 0
     self.estimated_weighted_utility = 0
@@ -101,10 +102,12 @@ class Outcome:
       if not with_actuators:
         raise ValueError('with_actuators', 'Must be provided if outcome_likelihood_estimator is set.')
 
-      y = outcome_likelihood_estimator.estimate(with_sensors, with_actuators, self.sensors)
-      self.probability = y or 0
+      p, ci = outcome_likelihood_estimator.estimate(with_sensors, with_actuators, self.sensors)
+      self.probability = p
+      self.probability_95ci = ci
     else:
       self.probability = 0
+      self.probability_95ci = 1
 
 
 
@@ -118,8 +121,9 @@ class Outcome:
   def __repr__(self):
     retval = 'OUTCOME: '
     retval += str(self.sensors)
-    retval += ' ({:2d}% ${:.2f} = ${:.2f})'.format( 
+    retval += ' ({:2d}%±{:d}% ${:.2f} = ${:.2f})'.format( 
         int(100*(self.probability or 0)), 
+        int(100*(self.probability_95ci or 0)), 
         self.estimated_absolute_utility or 0,
         self.estimated_weighted_utility or 0
         )

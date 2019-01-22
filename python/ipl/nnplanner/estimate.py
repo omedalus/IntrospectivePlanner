@@ -94,7 +94,8 @@ class OutcomeLikelihoodEstimator:
     """
     if self.organism is None or self.organism.experience_repo is None:
       raise ValueError('Experience repo must be specified.')
-    return self.organism.experience_repo.get_outcome_probability(sensors_prev, action, sensors_next)
+    p, ci = self.organism.experience_repo.get_outcome_probability(sensors_prev, action, sensors_next)
+    return p, ci
 
 
   def get_known_outcomes(self, sensors_prev, action, prob_threshold=0):
@@ -106,9 +107,11 @@ class OutcomeLikelihoodEstimator:
     for sensorsprob in sensorsprobs:
       sensors = sensorsprob[0]
       prob = sensorsprob[1]
+      ci = sensorsprob[2]
       c = Outcome()
       c.sensors = sensors
       c.probability = prob
+      c.probability_95ci = ci
       outcomes.append(c)
 
     return outcomes
@@ -124,7 +127,7 @@ class OutcomeLikelihoodEstimator:
       a = Action()
       a.actuators = actuators
       actions.append(a)
-      
+
     return actions
 
 
