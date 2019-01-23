@@ -139,7 +139,7 @@ class ExperienceRepo:
     # https://sigmazone.com/binomial-confidence-intervals/
     z95 = 1.96
     n = action_record.count
-    ci = 2 * z95 * math.sqrt ( p*(1.0-p) / n )
+    ci = z95 * math.sqrt ( p*(1.0-p) / n )
 
     # Normalize the CI range to [0,1]
     ci = min(ci, 1)

@@ -54,7 +54,7 @@ class ElMazeGame:
 
     self.__is_alive = True 
     self.__position = 0
-    self.__orientation = 'NORTH' # random.choice(CARDINALS)
+    self.__orientation = random.choice(CARDINALS)
     self.__last_cmd = None
 
     self.__victory_position = num_steps_before_bend + num_steps_after_bend

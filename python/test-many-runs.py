@@ -1,5 +1,6 @@
 import ipl 
 import pickle
+import random
 
 
 results = []
@@ -17,7 +18,9 @@ for itrial in range(100):
   for irun in range(20):
     print('Trial {:4d}\tRun {:4d}'.format(itrial+1, irun+1))
 
-    game = ipl.games.ElMazeGame(3,2)
+
+    game = ipl.games.ElMazeGame(random.randint(1,20), random.randint(1,20))
+    print(game.title)
     organism.reset_state()
     
     while not game.eof():
@@ -25,22 +28,23 @@ for itrial in range(100):
       oa = organism.choose_action()
       game.act(oa.actuators)
 
-      if game.turn % 100 == 0:
-        print('\tTrial {:4d}\tRun: {:4d}\t Turns elapsed: {:4d}\tExperience repo size: {:8d}'.format(
-          itrial+1,
-          irun+1,
-          game.turn, 
-          len(organism.experience_repo) 
-        ))
+      print('\tTrial {:4d}\tRun: {:4d}\t Turns elapsed: {:4d}\tExperience repo size: {:8d}'.format(
+        itrial+1,
+        irun+1,
+        game.turn, 
+        len(organism.experience_repo) 
+      ))
+      game.draw()
 
 
     organism.handle_sensor_input(game.sensors())
     organism.maintenance()
 
-    print('\tCompleted in {:4d} turns.'.format(game.turn))
+    parfrac = game.turn / game.par
+    print('\tCompleted in {:4d} turns. Par {:4d}. Performance: {:.4f}'.format(game.turn, game.par, parfrac))
     print()
 
-    trialresults.append(game.turn)
+    trialresults.append(parfrac)
   results.append(trialresults)
 
 print(results)

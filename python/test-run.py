@@ -1,5 +1,7 @@
 import ipl 
 import pickle
+import random
+
 
 game = ipl.games.ElMazeGame(3,2)
 organism = ipl.Organism()
@@ -15,6 +17,9 @@ try:
 except FileNotFoundError:
   print('No experience repository file found. Starting from scratch.')
 
+
+game = ipl.games.ElMazeGame(random.randint(1,20), random.randint(1,20))
+print(game.title)
 
 organism.reset_state()
 

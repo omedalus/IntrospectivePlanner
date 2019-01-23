@@ -57,7 +57,12 @@ class Outcome:
         lh = lookahead_cache.get(self.sensors, recursion_depth)
         if lh is not None:
           cache_hit = True
+          # We already know a way to get to this state, and the way we already
+          # know about is at least as good as we are currently exploring.
+          # Give our current exploration no credit; don't waste time on it.
+          # Set it to 0 and not to lh.utility
           self.estimated_absolute_utility = lh.utility
+
 
       # If we missed the cache, but we can still recurse, then we still have a chance of
       # populating this lookahead. But it's computationally costly.
@@ -217,7 +222,9 @@ class OutcomeGenerator:
         recursion_threshold=self.params.recursion_threshold,
         lookahead_cache = self.organism.lookahead_cache
       )
-      c.estimated_weighted_utility = c.estimated_absolute_utility * c.probability
+      # Optimism! 
+      # Bias the utility estimate towards the top of the 95% confidence interval.
+      c.estimated_weighted_utility = c.estimated_absolute_utility * (c.probability + c.probability_95ci)
 
     # NOTE: It might be more useful to explore *some* of the utilities of lower-probability
     # outcomes. After all, a fairly low-probability outcome could have a very high utility,
