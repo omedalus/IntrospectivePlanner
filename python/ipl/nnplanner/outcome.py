@@ -1,5 +1,5 @@
 import numpy  # pylint: disable=E0401
-
+import random
 
 
 class Outcome:
@@ -211,6 +211,7 @@ class OutcomeGenerator:
 
       population.append(outcome)
 
+    random.shuffle(population)
     population.sort(key=lambda c: -c.probability_most_optimistic() )
     population = [c for c in population if c.probability_most_optimistic() > self.params.prob_threshold]
     population = population[:self.params.num_keep]
