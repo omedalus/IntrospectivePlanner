@@ -46,7 +46,7 @@ class Organism:
     def fn_utility(s): return s[victory_field_idx]
 
     n_sensors = config['n_sensors'] + self.num_registers
-    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 3, 10, .10, .95)
+    cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 0, 10, .10, .95)
     self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
@@ -129,6 +129,15 @@ class Organism:
     # be found in self.action, which we haven't cleared yet.
     if self.lookahead_cache is not None:
       self.lookahead_cache.clear()
+
+      # Put the current state in the lookahead cache with ZERO UTILITY.
+      # There is no utility in performing an action just to return to where
+      # you already are.
+      self.lookahead_cache.put(
+        sensors=self.sensors, 
+        actuators=None, 
+        utility=0, 
+        recursion_depth=self.action_outcome_lookahead)
 
     actions = self.action_generator.generate(
       self.sensors, 

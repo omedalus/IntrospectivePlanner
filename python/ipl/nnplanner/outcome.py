@@ -15,6 +15,9 @@ class Outcome:
     self.responses = []
 
 
+  def probability_most_optimistic(self):
+    return min(self.probability + self.probability_95ci, 1.0)
+
 
   def fill_random(self, params):
     """Populate the sensors with a random vector.
@@ -61,7 +64,7 @@ class Outcome:
           # know about is at least as good as we are currently exploring.
           # Give our current exploration no credit; don't waste time on it.
           # Set it to 0 and not to lh.utility
-          self.estimated_absolute_utility = lh.utility
+          self.estimated_absolute_utility = 0 # lh.utility
 
 
       # If we missed the cache, but we can still recurse, then we still have a chance of
@@ -79,7 +82,7 @@ class Outcome:
 
         if len(recursed_actions):
           best_action = max(recursed_actions, key=lambda a: a.expected_utility)
-          self.estimated_absolute_utility = best_action.expected_utility
+          self.estimated_absolute_utility = min(best_action.expected_utility, 1.0)
 
           if lookahead_cache is not None:
             lookahead_cache.put(self.sensors, best_action.actuators, best_action.expected_utility, recursion_depth)
@@ -192,6 +195,7 @@ class OutcomeGenerator:
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_outcomes(sensors_prev, actuators)
   
+  
     for _ in range(self.params.num_generate):
       outcome = Outcome()
       outcome.fill_random(self.params)
@@ -207,8 +211,8 @@ class OutcomeGenerator:
 
       population.append(outcome)
 
-    population.sort(key=lambda c: -c.probability)
-    population = [c for c in population if c.probability > self.params.prob_threshold]
+    population.sort(key=lambda c: -c.probability_most_optimistic() )
+    population = [c for c in population if c.probability_most_optimistic() > self.params.prob_threshold]
     population = population[:self.params.num_keep]
 
     #print(population)
@@ -224,7 +228,7 @@ class OutcomeGenerator:
       )
       # Optimism! 
       # Bias the utility estimate towards the top of the 95% confidence interval.
-      c.estimated_weighted_utility = c.estimated_absolute_utility * (c.probability + c.probability_95ci)
+      c.estimated_weighted_utility = c.estimated_absolute_utility * c.probability_most_optimistic()
 
     # NOTE: It might be more useful to explore *some* of the utilities of lower-probability
     # outcomes. After all, a fairly low-probability outcome could have a very high utility,

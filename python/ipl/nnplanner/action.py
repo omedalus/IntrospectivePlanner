@@ -18,23 +18,16 @@ class Action:
       outcome_generator {OutcomeGenerator} -- An object that lets us generate outcomes.
       recursion_depth {int} -- Passed along to outcome generator.
     """
+    self.expected_utility = 0
+
     #print('recursion_depth=', recursion_depth, ' Evaluating action ', sensors, self.actuators)
     self.outcomes = outcome_generator.generate(
       sensors_prev=sensors, 
       actuators=self.actuators,
       recursion_depth=recursion_depth
-    )    
-
-    self.expected_utility = 0
-    for oc in self.outcomes:
-      self.expected_utility += oc.estimated_weighted_utility
-
-    # Scale back the utility in order to taper the utility of longer action plans.
-    # Every level of recursion reduces the utility a little bit.
-    self.expected_utility *= .9
+    )
 
     # Curiosity!
-    #    
     # Curiosity is somewhat complicated. It should be based on a utility function that
     # permits the organism to explore in times of either very low or very high stress,
     # but in moderate-stress situations the organism should be less willing to take risks.
@@ -43,10 +36,24 @@ class Action:
     # https://www.mindtools.com/pages/article/inverted-u.htm
     # TODO: This means we have to pass organism state into this function.
     # For now, we'll set the organism to more or less permanent exploration mode.
-
     if len(self.outcomes) == 0:
       # Actions that have no foreseeable outcomes should be at least somewhat enticing.
       self.expected_utility = .1
+      return
+
+    # Remove any outcomes whose state is the state we're currently in.
+    # No sense wasting time recursing upon ourselves.
+    self.outcomes = [oc for oc in self.outcomes if oc.sensors != sensors]
+
+    for oc in self.outcomes:
+      self.expected_utility += oc.estimated_weighted_utility
+
+    # Scale back the utility in order to taper the utility of longer action plans.
+    # Every level of recursion reduces the utility a little bit.
+    self.expected_utility *= .9
+
+
+
 
 
 
