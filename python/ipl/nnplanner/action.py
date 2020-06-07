@@ -137,9 +137,22 @@ class ActionGenerator:
     Arguments:
       sensors {list} -- The state of the sensors in which these actions will be taken.
     """
+    DEBUGGGGGGGGG = False
+    if recursion_depth == 5 and (sensors == [0,1,0,1,0,0] or sensors == [0,1,0,1,0,1]):
+      DEBUGGGGGGGGG = True
+
+    if DEBUGGGGGGGGG:
+      print('SITUATION ', sensors)
+
+
     population = []
     if self.organism is not None and self.organism.outcome_likelihood_estimator is not None:
       population += self.organism.outcome_likelihood_estimator.get_known_actions(sensors)
+
+    if DEBUGGGGGGGGG:
+      print('KNOWN ACTIONS')
+      for action in population:
+        print('\t', action)
 
     for _ in range(self.params.num_generate):
       action = Action()
@@ -151,16 +164,6 @@ class ActionGenerator:
       population.append(action)
 
 
-    force_turn_left = False
-    if force_turn_left:
-      population = [Action([0,0,0,0,0])]
-      if sensors[0] == 1:
-        population[0].actuators[0] = 1
-      else:
-        population[0].actuators[1] = 1
-        
-
-
     for action in population:
       if self.organism and self.organism.outcome_generator:
         action.evaluate(
@@ -168,6 +171,14 @@ class ActionGenerator:
           self.organism.outcome_generator, 
           recursion_depth=recursion_depth
         )
+
+    if DEBUGGGGGGGGG:
+      print('AFTER CULL')
+      for action in population:
+        print('\t', action)
+        if action.actuators == [0,1,0,0,0] or action.actuators == [0,1,0,0,1]:
+          print('\t\t', action.outcomes)
+
 
     numpy.random.shuffle(population)
     population.sort(key=lambda a: -a.expected_utility)

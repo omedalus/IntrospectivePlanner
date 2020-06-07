@@ -16,6 +16,7 @@ class Organism:
     self.action_generator = None
     self.outcome_likelihood_estimator = None
     self.outcome_generator = None
+    self.utility_fn = None
 
     self.experience_repo = None
     self.lookahead_cache = None
@@ -27,6 +28,8 @@ class Organism:
 
     self.num_registers = 1
     self.registers = []
+
+    self.num_turns_awake = 0
 
     self.verbosity = 0
     self.randomtest = False
@@ -43,11 +46,12 @@ class Organism:
     self.action_generator = nnplanner.ActionGenerator(self, ag_params)
 
     victory_field_idx = config['victory_field_idx']
-    def fn_utility(s): return s[victory_field_idx]
+    def utility_fn(s): return s[victory_field_idx]
+    self.utility_fn = utility_fn
 
     n_sensors = config['n_sensors'] + self.num_registers
     cg_params = nnplanner.OutcomeGeneratorParams(n_sensors, 0, 10, 0, .95)
-    self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, fn_utility)
+    self.outcome_generator = nnplanner.OutcomeGenerator(self, cg_params, self.utility_fn)
 
     ole_params = nnplanner.OutcomeLikelihoodEstimatorParams(
         n_sensors, n_actuators)
@@ -65,6 +69,7 @@ class Organism:
 
 
   def reset_state(self):
+    self.num_turns_awake = 0
     self.sensors = None
     self.action = None
     self.registers = [0] * self.num_registers
@@ -90,6 +95,7 @@ class Organism:
 
   def handle_sensor_input(self, sensors):
     sensors = sensors + self.registers
+    self.num_turns_awake += 1
 
     if self.verbosity > 0:
       print('ORGANISM: Received sensor input: {}'.format(sensors))
@@ -100,8 +106,9 @@ class Organism:
       # we thought might happen that didn't.
       if self.experience_repo is not None:
         magnitude = 1
-        #if sensors[4] == 1:
-        #  magnitude = 100
+        if self.utility_fn(sensors) > 0:
+          magnitude = self.num_turns_awake
+
         self.experience_repo.add(
           self.sensors,
           self.action.actuators,

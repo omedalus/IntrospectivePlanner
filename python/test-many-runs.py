@@ -40,6 +40,8 @@ for itrial in range(100):
     organism.handle_sensor_input(game.sensors())
     organism.maintenance()
 
+    pickle.dump(organism.experience_repo, open("organism-exprepo-manyruns.p", "wb"))
+
     parfrac = game.turn / game.par
     print('\tCompleted in {:4d} turns. Par {:4d}. Performance: {:.4f}'.format(game.turn, game.par, parfrac))
     print()
